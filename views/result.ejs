@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search</title>
+    <!--Bootstrap-->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!--jQuery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-2.2.2.js"></script>
+	<link href="css/style.css" rel="stylesheet" type="text/css">
+</head>
+    <body>
+    	<div class="search-bar">
+            <form class="navbar-form navbar-left" role="search" action="http://140.123.101.166:2888/search" method="POST">
+                <div class="form-group input-group">
+                    <input type="text" class="form-control" placeholder="Keyword" size="50" name="key" value="<%= keyword %>">
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="time">
+            <p>
+                <h3>Find <%= total %> results, take <%= time %> seconds </h3>
+            </p>
+        </div>
+        <div class="result">
+            <div class="res">
+                <% if( total > 0)
+                {
+                    var i;
+                    var start = 0;
+                    var end = total;
+                    if(total > (currentPage*10))
+                        end = 10;
+                    else
+                        end = total - ((currentPage-1) * 10);
+
+                    for(i = start; i < end; i++) { %>
+                        <div class="panel panel-info">
+                            <div id="<%= record['result'][i].rid %>" class="panel-heading res-title"><a href="<%= record['result'][i].U %>" target="_blank"><%- record["result"][i].T %></a></div>
+                            <div class="panel-body">
+                                <%- record["result"][i].B %>
+                            </div>
+                        </div>            
+                <%  }
+                } %>
+            </div>
+        </div>       
+        <% if (pageCount > 1) { 
+            if(pageCount > 10)
+                pageCount = 10;
+        %>
+        <div class = "pageDiv" id="page">
+            <div>
+                <ul class="pagination">
+                    <% if (currentPage > 1) { %>
+                        <li><a href="/page?key=<%= keyword %>&page=1" id="a1">&laquo;</a></li>
+                    <% } %>
+                    <% var i = 1;
+                    if (currentPage > 5) {
+                        i = +currentPage - 4;
+                    } %>
+                    <% if (i !== 1) { %>
+                        <li class="disabled"><a href="#">...</a></li>
+                    <% } %>
+                    <% for (i; i<=pageCount; i++) { %>
+                        <% if (currentPage == i) { %>
+                            <li class="active"><span><%= i %> <span class="sr-only">(current)</span></span></li>
+                        <% } else { %>
+                            <li><a href="/page?page=<%= i %>&key=<%= keyword %>"><%= i %></a></li>
+                        <% } %>
+                        <% if (i == (+currentPage + 4)) { %>
+                            <li class="disabled"><a href="#">...</a></li>
+                        <% break; } %>
+                    <% } %>
+                    <% if (currentPage != pageCount) { %>
+                        <li><a href="/page?page=<%= pageCount %>&key=<%= keyword %>">&raquo;</a></li>
+                    <% } %>
+                </ul>
+            </div>
+            </div>
+        <% } %>
+    </body>
+</html>

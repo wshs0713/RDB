@@ -1,0 +1,55 @@
+    body {
+        font-family: 微軟正黑體;
+    }
+    
+    em {
+        color: #FF0000;
+        font-style: normal;
+        font-weight: bold;
+    }
+    
+    .search-bar {
+        margin-top: 20px;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-justify-content: center;
+        justify-content: center;
+    }
+    
+    .result {
+        margin-top: 25px;
+        display: -webkit-flex;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+    }
+    
+    .res {
+        width: 65%;
+    }
+        
+    .res-title {
+        font-size: 20px;
+        font-weight: bold;
+        font-color: blue;
+    }
+    
+    .res-content {
+        font-size: 18px;
+    }
+    
+    .time {
+        text-align: center;
+    }
+    
+    .pageDiv {
+        width: 100%;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-justify-content: center;
+        justify-content: center;
+        align-items: flex-end;
+        align-content: flex-end;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
