@@ -1,9 +1,9 @@
 # RDB
-#### Backend (C)
+### Backend (C)
 + make
 
-#### Webage
-##### Backend
-+ node server.js
-##### Frontend
-+ default port: 2888
+### Webage (Node.js)
++ Backend
+	+ node server.js
++ Frontend
+	+ default port: 2888
