@@ -29,7 +29,7 @@ typedef struct Result
 } RES;
 
 void showHelp();
-void writeConfing(Conf *config);
+void writeConfig(Conf *config);
 int readConfig(char *db, Conf *config);
 void getPrev(int *prevRID, int *prevOffset, Conf *config);
 void createDB(char *db, char *field, char *title);

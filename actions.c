@@ -305,7 +305,7 @@ void fput(char *recFile, char *recBeg, Conf *config)
 				offset = 0;
 				printf("curFile:%d\n", (*config).curFile);
 				printf("new offset:%d", offset);
-				writeConfig(*config);
+				writeConfig(config);
 			}
 
 			//read record file
