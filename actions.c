@@ -377,14 +377,14 @@ void fput(char *recFile, char *recBeg, Conf *config)
 			fclose(fpr);
 			fclose(fpw);
 			fclose(fp_index);
-			free(line);
-			free(writeBuf);
 		}
 	}
 	else
 	{
 		printf("DB not exist!\n");
 	}
+	free(line);
+	free(writeBuf);
 }
 
 void rget(char *field, char *val, int start, int end, Conf *config)
