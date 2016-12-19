@@ -11,13 +11,15 @@ int main(int argc, char *argv[])
 		-rupdate [db name] [rid] [record]: update record
 	*/
 	char *field, *val, *ptr;
-	int i, len = 0, fieldLen = 0, valLen = 0, status = 0;
-	int start = 0, end = 0;
+	int i, len = 0, fieldLen = 0, valLen = 0;
+	int status = 0, start = 0, end = 0;
+	int value = 0;
 	Conf config;
 	
 	//initialize
 	memset(config.dbName, '\0', 20);
 	config.fileSize = 0;
+	config.recCnt = -1;
 	config.curFile = 0;
 	config.maxBuffer = 65536;
 	config.patCnt = 0;
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
 					/*printf("dbName:%s\n", config.dbName);
 					printf("createTime:%s\n", config.createTime);
 					printf("fileSize:%d\n", config.fileSize);
+					printf("recCnt:%d\n", config.recCnt);
 					printf("curFile:%d\n", config.curFile);
 					printf("maxBuffer:%d\n", config.maxBuffer);
 					printf("patCnt:%d\n", config.patCnt);
@@ -133,17 +136,72 @@ int main(int argc, char *argv[])
 							showHelp();
 						}
 						else
-							rdel(argv[3], &config);
+						{
+							ptr = argv[3];
+							len = strlen(ptr);
+							if(strstr(ptr, "=") != NULL)
+							{
+								while(*ptr != '=')
+								{
+									ptr++;
+									fieldLen++;
+								}
+								ptr++; //skip '='
+							
+								valLen = len - fieldLen - 1; //-1: =
+								val = (char *)malloc((valLen+1) * sizeof(char));
+								memset(val, '\0', valLen+1);
+								strncpy(val, ptr, valLen);
+								value = atoi(val);
+							}
+							else
+								value = atoi(argv[3]);
+
+							rdel(value, &config);
+						}
 					}
 					else if(strcmp(argv[1], "-rupdate") == 0)
 					{
+						//./rdb -rupdate dbname rid=123 rec="____"
 						if(argc != 5) //argument number is wrong
 						{
 							printf("Error!\n");
 							showHelp();
 						}
 						else
-							rupdate(argv[3], argv[4], &config);
+						{
+							ptr = argv[3];
+							len = strlen(ptr);
+							if(strstr(ptr, "=") != NULL)
+							{
+								while(*ptr != '=')
+								{
+									ptr++;
+									fieldLen++;
+								}
+								ptr++; //skip '='
+							
+								valLen = len - fieldLen - 1; //-1: =
+								val = (char *)malloc((valLen+1) * sizeof(char));
+								memset(val, '\0', valLen+1);
+								strncpy(val, ptr, valLen);
+								value = atoi(val);
+							}
+							else
+								value = atoi(argv[3]);
+
+							ptr = argv[4];
+							if(strstr(ptr, "=") != NULL)
+							{
+								while(*ptr != '=')
+								{
+									ptr++;
+								}
+								ptr++; //skip '='
+							}
+
+							rupdate(value, ptr, &config);
+						}
 					}
 				}
 				else

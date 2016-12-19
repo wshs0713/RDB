@@ -11,26 +11,6 @@ void showHelp()
 	printf("\t-rdel [db name] [rid]: delete record by rid\n");
 	printf("\t-rupdate [db name] [rid] [record]: update record\n");
 }
-void writeConfig(Conf *conf)
-{
-	FILE *fp;
-	char fileName[50] = {'\0'};
-	int i;
-
-	sprintf(fileName, "./data/db/%s.conf", (*conf).dbName);
-	fp = fopen(fileName, "w");
-	fprintf(fp, "dbName:%s\n", (*conf).dbName);
-	fprintf(fp, "createTime:%s\n", (*conf).createTime);
-	fprintf(fp, "recCnt:%d\n", (*conf).recCnt);
-	fprintf(fp, "fileSize:%d\n", (*conf).fileSize);
-	fprintf(fp, "currentFile:%d\n", (*conf).curFile);
-	fprintf(fp, "maxBuffer:%d\n", (*conf).maxBuffer);
-	fprintf(fp, "patCnt:%d\n", (*conf).patCnt);
-	fprintf(fp, "field_pat:%s", (*conf).pat[0]);
-	for(i = 1; i < (*conf).patCnt; i++)
-		fprintf(fp, ",%s", (*conf).pat[i]);
-	fprintf(fp, "\ntitle_pat:%s\n", (*conf).titlePat);
-}
 int readConfig(char *db, Conf *conf)
 {
 	//return pattern count
@@ -113,3 +93,39 @@ int readConfig(char *db, Conf *conf)
 		return -1;
 }
 
+void writeConfig(Conf *conf)
+{
+	FILE *fp;
+	char fileName[50] = {'\0'};
+	int i;
+
+	sprintf(fileName, "./data/db/%s.conf", (*conf).dbName);
+	fp = fopen(fileName, "w+");
+	fprintf(fp, "dbName:%s\n", (*conf).dbName);
+	fprintf(fp, "createTime:%s\n", (*conf).createTime);
+	fprintf(fp, "recCnt:%d\n", (*conf).recCnt);
+	fprintf(fp, "fileSize:%d\n", (*conf).fileSize);
+	fprintf(fp, "currentFile:%d\n", (*conf).curFile);
+	fprintf(fp, "maxBuffer:%d\n", (*conf).maxBuffer);
+	fprintf(fp, "patCnt:%d\n", (*conf).patCnt);
+	fprintf(fp, "field_pat:%s", (*conf).pat[0]);
+	for(i = 1; i < (*conf).patCnt; i++)
+		fprintf(fp, ",%s", (*conf).pat[i]);
+	fprintf(fp, "\ntitle_pat:%s\n", (*conf).titlePat);
+	fclose(fp);
+}
+
+void writeIndex(DATA *data[], Conf *conf)
+{
+	FILE *fp;
+	char fileName[50] = {'\0'};
+	int i;
+
+	sprintf(fileName, "./data/db/%s.index", (*conf).dbName);
+	fp = fopen(fileName, "w+");
+	for( i = 0; i <= (*conf).recCnt; i++)
+	{
+		 fprintf("@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
+	}
+	fclose(fp);
+}

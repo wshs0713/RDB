@@ -387,7 +387,12 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 	DATA *data;
 
 	data = (DATA *)malloc(((*config).recCnt + 5)*sizeof(DATA));
+	
+	t_start = clock();
 	readIndex(&data, config);
+	t_end = clock();
+	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
+	printf("@Time:%.3lf\n", take);
 	/*for(i = 0; i <= (*config).recCnt; i++)
 	{
 		printf("@rid:%d,%d,%d,%d\n", data[i].rid, data[i].del, data[i].fileID, data[i].offset);
@@ -555,17 +560,33 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 	}
 }
 
-void rdel(char *id, Conf *config)
+void rdel(int rid, Conf *config)
 {
-	printf("rdel\n");
-	printf("id: %s\n", id);
-	printf("db: %s\n", (*config).dbName);
+	clock_t t_start, t_end;
+	double take = 0;
+	DATA *data;
+	data = (DATA *)malloc(((*config).recCnt + 5)*sizeof(DATA));
+	
+	t_start = clock();
+	readIndex(&data, config);
+	if(rid <= (*config).recCnt)
+	{
+		data[rid].del = 1;
+		writeIndex(&data, config);
+	}
+	else
+	{
+		printf("record id not exist\n");
+	}
+	t_end = clock();
+	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
+	printf("@Time:%.3lf\n", take);
 }
 
-void rupdate(char *id, char *rec, Conf *config)
+void rupdate(int rid, char *rec, Conf *config)
 {
 	printf("rupdate\n");
-	printf("id: %s\n", id);
+	printf("rid: %d\n", rid);
 	printf("rec: %s\n", rec);
 	printf("db: %s\n", (*config).dbName);
 }
