@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 							showHelp();
 						}
 						else
-							rput(argv[3], &config);
+							rput(-1, argv[3], &config);
 					}
 					else if(strcmp(argv[1], "-fput") == 0)
 					{

@@ -41,7 +41,7 @@ void writeConfig(Conf *config);
 void readIndex(DATA *data[], Conf *config);
 void writeIndex(DATA *data[], Conf *config);
 void createDB(char *db, char *field, char *title);
-void rput(char *rec, Conf *config);
+void rput(int RID, char *rec, Conf *config);
 void fput(char *recFile, char *recBeg, Conf *config);
 void rget(char *field, char *val, int start, int end, Conf *config);
 void rdel(int rid, Conf *config);
