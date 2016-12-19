@@ -10,6 +10,7 @@ typedef struct Config
 {
 	char dbName[20];
 	char *createTime;
+	int recCnt;
 	int fileSize;
 	int curFile;
 	int maxBuffer;
@@ -21,17 +22,23 @@ typedef struct Config
 typedef struct Result
 {
 	int rid;
-	int del;
 	int score;
-	char url[500];
-	char *title;
-	char *content;
+	int fileID;
+	int offset;
 } RES;
+
+typedef struct Data
+{
+	int rid;
+	int del;
+	int fileID;
+	int offset;
+} DATA;
 
 void showHelp();
 void writeConfig(Conf *config);
 int readConfig(char *db, Conf *config);
-void getPrev(int *prevRID, int *prevOffset, Conf *config);
+void readIndex(DATA *data[], Conf *config);
 void createDB(char *db, char *field, char *title);
 void rput(char *rec, Conf *config);
 void fput(char *recFile, char *recBeg, Conf *config);

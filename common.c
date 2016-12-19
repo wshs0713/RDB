@@ -21,10 +21,11 @@ void writeConfig(Conf *conf)
 	fp = fopen(fileName, "w");
 	fprintf(fp, "dbName:%s\n", (*conf).dbName);
 	fprintf(fp, "createTime:%s\n", (*conf).createTime);
+	fprintf(fp, "recCnt:%d\n", (*conf).recCnt);
 	fprintf(fp, "fileSize:%d\n", (*conf).fileSize);
 	fprintf(fp, "currentFile:%d\n", (*conf).curFile);
 	fprintf(fp, "maxBuffer:%d\n", (*conf).maxBuffer);
-	fprintf(fp, "patCnt%d\n", (*conf).patCnt);
+	fprintf(fp, "patCnt:%d\n", (*conf).patCnt);
 	fprintf(fp, "field_pat:%s", (*conf).pat[0]);
 	for(i = 1; i < (*conf).patCnt; i++)
 		fprintf(fp, ",%s", (*conf).pat[i]);
@@ -61,28 +62,29 @@ int readConfig(char *db, Conf *conf)
 				memset((*conf).createTime, '\0', len+1);
 				strncpy((*conf).createTime, ptr, len);
 			}
+			else if(strncmp(line, "recCnt:", 7)==0)
+			{
+				ptr += 7;
+				(*conf).recCnt = atoi(ptr);
+			}
 			else if(strncmp(line, "fileSize:", 9)==0)
 			{
 				ptr += 9;
-				len = strlen(ptr);
 				(*conf).fileSize = atoi(ptr);
 			}
 			else if(strncmp(line, "currentFile:", 12)==0)
 			{
 				ptr += 12;
-				len = strlen(ptr);
 				(*conf).curFile = atoi(ptr);
 			}
 			else if(strncmp(line, "maxBuffer:", 10)==0)
 			{
 				ptr += 10;
-				len = strlen(ptr);
 				(*conf).maxBuffer = atoi(ptr);
 			}
 			else if(strncmp(line, "patCnt:", 7)==0)
 			{
 				ptr += 7;
-				len = strlen(ptr);
 				(*conf).patCnt = atoi(ptr);
 			}
 			else if(strncmp(line, "field_pat:", 10)==0)
