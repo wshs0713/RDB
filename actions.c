@@ -41,7 +41,9 @@ void createDB(char *db, char *field, char *title)
 		}
 		if(flag == 1)
 		{
-			printf("Invalid DB name or field name!\nDB name allow to contain A~Z, a~z and 0~9\nfield name allow to contain A~Z, a~z, 0~9, '-' and '_'\n");
+			printf("Invalid DB name or field name!\n");
+			printf("DB name allow to contain A~Z, a~z and 0~9\n");
+			printf("field name allow to contain A~Z, a~z, 0~9, '-' and '_'\n");
 			return;
 		}
 		else
@@ -63,7 +65,7 @@ void createDB(char *db, char *field, char *title)
 				}
 
 				//create index file
-				sprintf(fileName, "./data/db/%s_index", db);
+				sprintf(fileName, "./data/db/%s.index", db);
 				openFile = open(fileName, O_CREAT | O_WRONLY, 0644);
 				if(openFile != -1)
 				{
@@ -77,7 +79,7 @@ void createDB(char *db, char *field, char *title)
 				}
 
 				//create config file
-				sprintf(fileName, "./data/db/%s_conf", db);
+				sprintf(fileName, "./data/db/%s.conf", db);
 				openFile = open(fileName, O_CREAT | O_WRONLY, 0644);
 				if(openFile != -1)
 				{
@@ -133,7 +135,7 @@ void getPrev(int *prevRID, int *prevOffset, Conf *config)
 	sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*config).curFile);
 	fpr = fopen(fileName, "r"); //rdb file
 
-	sprintf(fileName, "./data/db/%s_index", (*config).dbName);
+	sprintf(fileName, "./data/db/%s.index", (*config).dbName);
 	fp_index = fopen(fileName, "r"); //index file
 
 	fseek(fp_index, -1000, SEEK_END); //file cursor to end
@@ -188,7 +190,7 @@ void rput(char *rec, Conf *config)
 
 	if(strlen(rec) < (*config).maxBuffer)
 	{
-		sprintf(indexFile, "./data/db/%s_index", (*config).dbName);
+		sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 		if(access(indexFile, F_OK) != -1)
 		{
 			//get previous rid and offset
@@ -276,8 +278,8 @@ void fput(char *recFile, char *recBeg, Conf *config)
 	writeBuf = (char *)malloc(MAX * sizeof(char));
 	memset(writeBuf, '\0', MAX);
 	
-	sprintf(fileName, "./data/db/%s_conf", (*config).dbName);
-	sprintf(indexFile, "./data/db/%s_index", (*config).dbName);
+	sprintf(fileName, "./data/db/%s.conf", (*config).dbName);
+	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 
 	if(access(fileName, F_OK) != -1)
 	{
@@ -342,30 +344,19 @@ void fput(char *recFile, char *recBeg, Conf *config)
 				}
 				else
 				{
-					if(*ptr == '@')
+					for(i = 0; i < (*config).patCnt; i++)
 					{
-						for(i = 0; i < (*config).patCnt-1; i++) //last one is "@B:"
+						patLen = strlen((*config).pat[i]);
+						if(strncmp(ptr, (*config).pat[i], patLen) == 0)
 						{
-							patLen = strlen((*config).pat[i]);
-							if(strncmp(ptr, (*config).pat[i], patLen) == 0)
-							{
-								ptr += patLen; //ptr point to 'value'
-								sprintf(writeBuf, "%s%s", (*config).pat[i], ptr);
-								fwrite(writeBuf, sizeof(char), strlen(writeBuf), fpw);
-								offset += strlen(writeBuf);
+							ptr += patLen; //ptr point to 'value'
+							sprintf(writeBuf, "%s%s", (*config).pat[i], ptr);
+							fwrite(writeBuf, sizeof(char), strlen(writeBuf), fpw);
+							offset += strlen(writeBuf);
 
-								memset(writeBuf, '\0', MAX);
-								break;
-							}
+							memset(writeBuf, '\0', MAX);
+							break;
 						}
-					}
-					else
-					{
-						sprintf(writeBuf, "@B:%s", ptr);
-						fwrite(writeBuf, sizeof(char), strlen(writeBuf), fpw);
-						offset += strlen(writeBuf);
-
-						memset(writeBuf, '\0', MAX);
 					}
 				}
 			}
@@ -395,8 +386,8 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 	int fileID = 0, offset = 0, recStart = 0;
 	int score = 0, count = 0;
 	char fileName[40] = {'\0'}, indexFile[50] = {'\0'};
-	char *line, *line2, buf[1000] = {'\0'};
-	char *ptr, *valPtr, *fptr, *scorePtr, *filePtr;
+	char *line, *line2, buf[1000] = {'\0'}; //buf: temporally store field name of each line
+	char *ptr, *valPtr, *findPtr, *scorePtr, *filePtr;
 	clock_t t_start, t_end;
 	double take = 0;
 	RES result[20];
@@ -413,7 +404,7 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 		memset(result[i].content, '\0', MAX);
 	}
 
-	sprintf(indexFile, "./data/db/%s_index", (*config).dbName);
+	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 	if((strlen(field) != 0) && (strcmp(field, "rid") == 0)) //get rid
 	{
 		t_start = clock();
@@ -490,13 +481,13 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 		{
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, i);
 			fp = fopen(fileName, "r");
-			fp2 = fopen(fileName, "r");
+			fp2 = fopen(fileName, "r"); //for seeking to result record
 			offset = 0;
 			find = 0;
 			while(fgets(line, MAX-1, fp))
 			{
-				fptr = NULL;
-				if(strcmp(line, "@\n") == 0)
+				findPtr = NULL;
+				if(strcmp(line, "@\n") == 0) //record begin in rdb file
 				{
 					if(find == 1)
 					{
@@ -581,17 +572,17 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 				ptr++; //skip @
 				if(strlen(field) == 0) //full text search
 				{
-					fptr = strstr(line, val);
+					findPtr = strstr(line, val);
 				}
 				else
 				{
 					if(strncmp(ptr, field, strlen(field)) == 0)
 					{
 						ptr += strlen(field)+1; //skip field:
-						fptr = strstr(line, val);
+						findPtr = strstr(line, val);
 					}
 				}
-				if((fptr != NULL) && (del == 0))
+				if((findPtr != NULL) && (del == 0))
 				{
 					find = 1;
 				}
@@ -611,7 +602,7 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 			printf("{");
 			printf("\"rid\":\"%d\",", result[i].rid);
 			printf("\"del\":\"%d\",", result[i].del);
-			//printf("\"score\":\"%d\",", result[i].score);
+			printf("\"score\":\"%d\",", result[i].score);
 			printf("\"U\":\"%s\",", result[i].url);
 			printf("\"T\":\"%s\",", result[i].title);
 			printf("\"B\":\"%s\"", result[i].content);

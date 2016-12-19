@@ -17,7 +17,7 @@ void writeConfig(Conf *conf)
 	char fileName[50] = {'\0'};
 	int i;
 
-	sprintf(fileName, "./data/db/%s_conf", (*conf).dbName);
+	sprintf(fileName, "./data/db/%s.conf", (*conf).dbName);
 	fp = fopen(fileName, "w");
 	fprintf(fp, "dbName:%s\n", (*conf).dbName);
 	fprintf(fp, "createTime:%s\n", (*conf).createTime);
@@ -38,7 +38,7 @@ int readConfig(char *db, Conf *conf)
 	char *ptr, *tok;
 	int len = 0, patCnt = 0;
 
-	sprintf(fileName, "./data/db/%s_conf", db);
+	sprintf(fileName, "./data/db/%s.conf", db);
 	if(access(fileName, F_OK) != -1)
 	{
 		fp = fopen(fileName, "r");
