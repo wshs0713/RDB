@@ -117,59 +117,6 @@ void createDB(char *db, char *field, char *title)
 		}
 	}
 }
-void readIndex(DATA *data[], Conf *config)
-{
-	FILE *fp_index;
-	int count = 0;
-	char line[1024], fileName[40] = {'\0'}, buf[1024] = {'\0'};
-	char *idStart, *delStart, *fileStart, *offsetStart;
-
-	sprintf(fileName, "./data/db/%s.index", (*config).dbName);
-	fp_index = fopen(fileName, "r"); //index file
-	while(fgets(line, 1024, fp_index))
-	{
-		idStart = line;
-		while(*idStart != ':') //pointer to rid start
-			idStart++;
-		idStart++;
-	//	printf("idStart:%s", idStart);
-		
-		delStart = idStart;
-		while(*delStart != ',') //pointer to del start
-			delStart++;
-		delStart++;
-	//	printf("delStart:%s", delStart);
-		
-		fileStart = delStart;
-		while(*fileStart != ',') //pointer to file start
-			fileStart++;
-		fileStart++;
-	//	printf("fileStart:%s", fileStart);
-
-		offsetStart = fileStart;
-		while(*offsetStart != ',') //pointer to offset start
-			offsetStart++;
-		offsetStart++;
-	//	printf("offsetStart:%s", offsetStart);
-		
-		//rid
-		strncpy(buf, idStart, (delStart - idStart)-1); //-1: ,
-		(*data)[count].rid = atoi(buf);
-		memset(buf, '\0', 1024);
-		//del	
-		strncpy(buf, delStart, (fileStart - delStart)-1); //-1: ,
-		(*data)[count].del = atoi(buf);
-		memset(buf, '\0', 1024);
-		//fileID
-		strncpy(buf, fileStart, (offsetStart - fileStart)-1); //-1: ,
-		(*data)[count].fileID = atoi(buf);
-		memset(buf, '\0', 1024);
-		//offset
-		(*data)[count].offset = atoi(offsetStart);
-
-		count++;	
-	}
-}
 
 void rput(char *rec, Conf *config)
 {
@@ -392,7 +339,7 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 	readIndex(&data, config);
 	t_end = clock();
 	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
-	printf("@Time:%.3lf\n", take);
+	//printf("Time:%.3lf\n", take);
 	/*for(i = 0; i <= (*config).recCnt; i++)
 	{
 		printf("@rid:%d,%d,%d,%d\n", data[i].rid, data[i].del, data[i].fileID, data[i].offset);
@@ -408,36 +355,44 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 		value = atoi(val);
 		if(value <= (*config).recCnt)
 		{
-			//get record
-			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[value].fileID);
-			fp = fopen(fileName, "r");
-			fseek(fp, data[value].offset, SEEK_SET);
-			
-			printf("{\"result\":[{");
-			while(fgets(line, MAX-1, fp))
+			if(data[value].del != 1)
 			{
-				if(strcmp(line, "@\n") == 0)
-					break;
-
-				len = strlen(line);
-				line[len-1] = '\0'; //replace '\n'
+				//get record
+				sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[value].fileID);
+				fp = fopen(fileName, "r");
+				fseek(fp, data[value].offset, SEEK_SET);
+			
+				printf("{\"result\":[{");
+				while(fgets(line, MAX-1, fp))
+				{
+					if(strcmp(line, "@\n") == 0)
+						break;
+	
+					len = strlen(line);
+					line[len-1] = '\0'; //replace '\n'
 				
-				ptr = line;
-				ptr++; //skip '@'
-				valPtr = ptr;
-				while((*valPtr != ':') && (*ptr != '\0'))
-					valPtr++;
-				valPtr++; //skip ':'
-				memset(buf, '\0', 1000);
-				strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':'
-				
-				printf("\"%s\":\"%s\"", buf,valPtr);
-				if(strstr(line, "@B:") == NULL)
-					printf(",");
+					ptr = line;
+					ptr++; //skip '@'
+					valPtr = ptr;
+					while((*valPtr != ':') && (*ptr != '\0'))
+						valPtr++;
+					valPtr++; //skip ':'
+					memset(buf, '\0', 1000);
+					strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':'
+					
+					printf("\"%s\":\"%s\"", buf,valPtr);
+					if(strstr(line, "@B:") == NULL)
+						printf(",");
+				}
+				printf("}]}\n");
+				printf("@Total:1\n");
+				fclose(fp);
 			}
-			printf("}]}\n");
-			printf("@Total:1\n");
-			fclose(fp);
+			else
+			{
+				printf("{\"result\":[]}\n");
+				printf("@Total:0\n");
+			}
 		}
 		else
 		{

@@ -115,6 +115,60 @@ void writeConfig(Conf *conf)
 	fclose(fp);
 }
 
+void readIndex(DATA *data[], Conf *config)
+{
+	FILE *fp_index;
+	int count = 0;
+	char line[1024], fileName[40] = {'\0'}, buf[1024] = {'\0'};
+	char *idStart, *delStart, *fileStart, *offsetStart;
+
+	sprintf(fileName, "./data/db/%s.index", (*config).dbName);
+	fp_index = fopen(fileName, "r"); //index file
+	while(fgets(line, 1024, fp_index))
+	{
+		idStart = line;
+		while(*idStart != ':') //pointer to rid start
+			idStart++;
+		idStart++;
+	//	printf("idStart:%s", idStart);
+		
+		delStart = idStart;
+		while(*delStart != ',') //pointer to del start
+			delStart++;
+		delStart++;
+	//	printf("delStart:%s", delStart);
+		
+		fileStart = delStart;
+		while(*fileStart != ',') //pointer to file start
+			fileStart++;
+		fileStart++;
+	//	printf("fileStart:%s", fileStart);
+
+		offsetStart = fileStart;
+		while(*offsetStart != ',') //pointer to offset start
+			offsetStart++;
+		offsetStart++;
+	//	printf("offsetStart:%s", offsetStart);
+		
+		//rid
+		strncpy(buf, idStart, (delStart - idStart)-1); //-1: ,
+		(*data)[count].rid = atoi(buf);
+		memset(buf, '\0', 1024);
+		//del	
+		strncpy(buf, delStart, (fileStart - delStart)-1); //-1: ,
+		(*data)[count].del = atoi(buf);
+		memset(buf, '\0', 1024);
+		//fileID
+		strncpy(buf, fileStart, (offsetStart - fileStart)-1); //-1: ,
+		(*data)[count].fileID = atoi(buf);
+		memset(buf, '\0', 1024);
+		//offset
+		(*data)[count].offset = atoi(offsetStart);
+
+		count++;	
+	}
+}
+
 void writeIndex(DATA *data[], Conf *conf)
 {
 	FILE *fp;
