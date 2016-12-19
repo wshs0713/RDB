@@ -1,4 +1,4 @@
 CC = gcc
 
 all: main.c
-	$(CC) -g -o rdb main.c common.c actions.c args.h
+	$(CC) -g -Wall -Werror -Wextra -o rdb main.c common.c actions.c args.h
