@@ -19,13 +19,13 @@ typedef struct Config
 	char titlePat[20];
 } Conf;
 
-typedef struct Result
+/*typedef struct Result
 {
 	int rid;
 	int score;
 	int fileID;
 	int offset;
-} RES;
+} RES;*/
 
 typedef struct Data
 {
