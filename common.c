@@ -125,7 +125,7 @@ void writeIndex(DATA *data[], Conf *conf)
 	fp = fopen(fileName, "w+");
 	for( i = 0; i <= (*conf).recCnt; i++)
 	{
-		 fprintf("@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
+		 fprintf(fp, "@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
 	}
 	fclose(fp);
 }
