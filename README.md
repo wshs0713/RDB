@@ -1,8 +1,8 @@
 # RDB
-### Backend (C)
+### RDB Backend (C)
 + make
 
-### Webage (Node.js)
+### Webpage (Node.js)
 + Backend
 	+ node server.js
 + Frontend
