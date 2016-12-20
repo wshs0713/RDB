@@ -121,8 +121,8 @@ void createDB(char *db, char *field, char *title)
 void rput(int RID, char *rec, Conf *config)
 {
 	FILE *fp, *fp_index;
-	int i, j, dataLen = 0, patLen = 0, dataCnt = 0;
-	int find = 0; //for checking record field
+	int i, j, dataLen = 0, dataCnt = 0;// patLen = 0;
+	//int find = 0; //for checking record field
 	int rid = 0, offset = 0;
 	char fileName[40] = {'\0'}, indexFile[40] = {'\0'};
 	char *data[50], *tok;
@@ -176,7 +176,9 @@ void rput(int RID, char *rec, Conf *config)
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*config).curFile);
 			fp = fopen(fileName, "a");
 			fprintf(fp, "@\n@rid:%d\n", rid);
-			for(i = 1; i < (*config).patCnt; i++)
+			for(j = 0; j< dataCnt; j++)
+				fprintf(fp, "%s\n", data[j]);
+			/*for(i = 1; i < (*config).patCnt; i++)
 			{
 				find = 0;
 				patLen = strlen((*config).pat[i]);
@@ -193,7 +195,7 @@ void rput(int RID, char *rec, Conf *config)
 				{
 					fprintf(fp, "%s\n", (*config).pat[i]);
 				}
-			}
+			}*/
 			if(RID == -1) //new record
 			{
 				(*config).recCnt++;
@@ -219,7 +221,7 @@ void fput(char *recFile, char *recBeg, Conf *config)
 {
 	FILE *fpr, *fpw, *fp_index;
 	int MAX = (*config).maxBuffer+1;
-	int i, patLen = 0;
+	//int i, patLen = 0;
 	int prevRID = 0, rid = 0, offset = 0;
 	char fileName[40] = {'\0'}, indexFile[50] = {'\0'};
 	char *line, *writeBuf, *ptr;
@@ -294,7 +296,9 @@ void fput(char *recFile, char *recBeg, Conf *config)
 				}
 				else
 				{
-					for(i = 0; i < (*config).patCnt; i++)
+					fprintf(fpw, "%s", ptr);
+					offset += strlen(ptr);
+					/*for(i = 0; i < (*config).patCnt; i++)
 					{
 						patLen = strlen((*config).pat[i]);
 						if(strncmp(ptr, (*config).pat[i], patLen) == 0)
@@ -307,7 +311,7 @@ void fput(char *recFile, char *recBeg, Conf *config)
 							memset(writeBuf, '\0', MAX);
 							break;
 						}
-					}
+					}*/
 				}
 			}
 			t_end = clock();
@@ -333,7 +337,7 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 {
 	FILE *fp;
 	int MAX = (*config).maxBuffer+1;
-	int i, value = 0, len = 0, find = 0, total = 0;
+	int i, j, value = 0, len = 0i, patLen = 0, find = 0, total = 0;
 	char fileName[40] = {'\0'}, indexFile[50] = {'\0'};
 	char *line, buf[1000] = {'\0'}; //buf: temporally store field name of each line
 	char *ptr, *valPtr, *findPtr;
@@ -379,19 +383,34 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 	
 					len = strlen(line);
 					line[len-1] = '\0'; //replace '\n'
-				
-					ptr = line;
-					ptr++; //skip '@'
-					valPtr = ptr;
-					while((*valPtr != ':') && (*ptr != '\0'))
-						valPtr++;
-					valPtr++; //skip ':'
-					memset(buf, '\0', 1000);
-					strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':'
+					find = 0;
+
+					//output specific field(set in config file)
+					for(j = 0; j < (*config).patCnt; j++)
+					{
+						patLen = strlen((*config).pat[j]);
+						if(strncmp(line, (*config).pat[j], patLen) == 0)
+						{
+							find = 1;
+							break;
+						}
+					}
+					if(find == 1)
+					{
+						ptr = line;
+						ptr++; //skip '@'
+						valPtr = ptr;
+						while((*valPtr != ':') && (*ptr != '\0'))
+							valPtr++;
+						valPtr++; //skip ':'
+						memset(buf, '\0', 1000);
+						strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':'
 					
-					printf("\"%s\":\"%s\"", buf,valPtr);
-					if(strstr(line, "@B:") == NULL)
-						printf(",");
+						printf("\"%s\":\"%s\"", buf,valPtr);
+						ptr = (*config).pat[(*config).patCnt-1]; //record end pattern
+						if(strstr(line, ptr) == NULL)
+							printf(",");
+					}
 				}
 				printf("}]}\n");
 				printf("@Total:1\n");
@@ -497,21 +516,35 @@ void rget(char *field, char *val, int start, int end, Conf *config)
 
 						len = strlen(line);
 						line[len-1] = '\0';
+						find = 0;
 				
-						ptr = line;
-						ptr++;
-						valPtr = line; //get value
-						while((*valPtr != ':') && (*valPtr != '\0'))
-							valPtr++;
-						valPtr++; //skip ':'
+						//output specific field(set in config file)
+						for(j = 0; j < (*config).patCnt; j++)
+						{
+							patLen = strlen((*config).pat[j]);
+							if(strncmp(line, (*config).pat[j], patLen) == 0)
+							{
+								find = 1;
+								break;
+							}
+						}
+						if(find == 1)
+						{
+							ptr = line;
+							ptr++;
+							valPtr = line; //get value
+							while((*valPtr != ':') && (*valPtr != '\0'))
+								valPtr++;
+							valPtr++; //skip ':'
 								
-						memset(buf, '\0', 1000);
-						strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':', field name
-						printf("\"%s\":\"%s\"", buf, valPtr);
+							memset(buf, '\0', 1000);
+							strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':', field name
+							printf("\"%s\":\"%s\"", buf, valPtr);
 
-						if(strstr(line, "@B:") == NULL)
-							printf(",");
-
+							ptr = (*config).pat[(*config).patCnt-1]; //record end pattern
+							if(strstr(line, ptr) == NULL)
+								printf(",");
+						}
 						if(data[result[i+1]].fileID != data[result[i]].fileID)
 						{
 							fclose(fp);
