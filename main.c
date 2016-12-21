@@ -15,17 +15,19 @@ int main(int argc, char *argv[])
 	int status = 0, start = 0, end = 0;
 	int value = 0;
 	Conf config;
+	INFO info;
 	
 	//initialize
 	memset(config.dbName, '\0', 20);
 	config.fileSize = 0;
-	config.recCnt = -1;
-	config.curFile = 0;
 	config.maxBuffer = 65536;
 	config.patCnt = 0;
 	for(i = 0; i < 50; i++)
 		memset(config.pat[i], '\0', 20);
 	memset(config.titlePat, '\0', 20);
+
+	info.recCnt = -1;
+	info.curFile = 0;
 	
 	if(argc > 1)
 	{
@@ -61,6 +63,7 @@ int main(int argc, char *argv[])
 					for(i = 0; i < config.patCnt; i++)
 						printf("%s", config.pat[i]);
 					printf("\ntitlePat:%s\n", config.titlePat);*/
+					readInfo(argv[2], &info);
 					if(strcmp(argv[1], "-rput") == 0)
 					{
 						if(argc != 4) //argument number is wrong
@@ -69,7 +72,7 @@ int main(int argc, char *argv[])
 							showHelp();
 						}
 						else
-							rput(-1, argv[3], &config);
+							rput(-1, argv[3], &config, &info);
 					}
 					else if(strcmp(argv[1], "-fput") == 0)
 					{
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
 							showHelp();
 						}
 						else
-							fput(argv[3], argv[4], &config);
+							fput(argv[3], argv[4], &config, &info);
 					}
 					else if(strcmp(argv[1], "-rget") == 0)
 					{
@@ -105,7 +108,7 @@ int main(int argc, char *argv[])
 							len = strlen(ptr);
 							if(strstr(ptr, "=") == NULL) //full text search
 							{
-								rget("", argv[3], start, end, &config);
+								rget("", argv[3], start, end, &config, &info);
 							}
 							else
 							{
@@ -124,7 +127,7 @@ int main(int argc, char *argv[])
 								memset(val, '\0', valLen+1);
 								strncpy(val, ptr, valLen);
 
-								rget(field, val, start, end, &config);
+								rget(field, val, start, end, &config, &info);
 							}
 						}
 					}
@@ -157,7 +160,7 @@ int main(int argc, char *argv[])
 							else
 								value = atoi(argv[3]);
 
-							rdel(value, &config);
+							rdel(value, &config, &info);
 						}
 					}
 					else if(strcmp(argv[1], "-rupdate") == 0)
@@ -200,7 +203,7 @@ int main(int argc, char *argv[])
 								ptr++; //skip '='
 							}
 
-							rupdate(value, ptr, &config);
+							rupdate(value, ptr, &config, &info);
 						}
 					}
 				}

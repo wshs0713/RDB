@@ -42,20 +42,10 @@ int readConfig(char *db, Conf *conf)
 				memset((*conf).createTime, '\0', len+1);
 				strncpy((*conf).createTime, ptr, len);
 			}
-			else if(strncmp(line, "recCnt:", 7)==0)
-			{
-				ptr += 7;
-				(*conf).recCnt = atoi(ptr);
-			}
 			else if(strncmp(line, "fileSize:", 9)==0)
 			{
 				ptr += 9;
 				(*conf).fileSize = atoi(ptr);
-			}
-			else if(strncmp(line, "currentFile:", 12)==0)
-			{
-				ptr += 12;
-				(*conf).curFile = atoi(ptr);
 			}
 			else if(strncmp(line, "maxBuffer:", 10)==0)
 			{
@@ -103,15 +93,55 @@ void writeConfig(Conf *conf)
 	fp = fopen(fileName, "w+");
 	fprintf(fp, "dbName:%s\n", (*conf).dbName);
 	fprintf(fp, "createTime:%s\n", (*conf).createTime);
-	fprintf(fp, "recCnt:%d\n", (*conf).recCnt);
 	fprintf(fp, "fileSize:%d\n", (*conf).fileSize);
-	fprintf(fp, "currentFile:%d\n", (*conf).curFile);
 	fprintf(fp, "maxBuffer:%d\n", (*conf).maxBuffer);
 	fprintf(fp, "patCnt:%d\n", (*conf).patCnt);
 	fprintf(fp, "field_pat:%s", (*conf).pat[0]);
 	for(i = 1; i < (*conf).patCnt; i++)
 		fprintf(fp, ",%s", (*conf).pat[i]);
 	fprintf(fp, "\ntitle_pat:%s\n", (*conf).titlePat);
+	fclose(fp);
+}
+void readInfo(char *db, INFO *info)
+{
+	FILE *fp;
+	char fileName[40] = {'\0'}, line[2048] = {'\0'};
+	char *ptr;
+	int len = 0;
+
+	sprintf(fileName, "./data/db/%s.info", db);
+	if(access(fileName, F_OK) != -1)
+	{
+		fp = fopen(fileName, "r");
+		while(fgets(line, 2048, fp))
+		{
+			len = strlen(line);
+			line[len-1] = '\0';
+			ptr = line;
+			
+			if(strncmp(line, "recCnt:", 7)==0)
+			{
+				ptr += 7;
+				(*info).recCnt = atoi(ptr);
+			}
+			else if(strncmp(line, "currentFile:", 12)==0)
+			{
+				ptr += 12;
+				(*info).curFile = atoi(ptr);
+			}
+		}
+		fclose(fp);
+	}
+}
+void writeInfo(INFO *info, Conf *conf)
+{
+	FILE *fp;
+	char fileName[50] = {'\0'};
+
+	sprintf(fileName, "./data/db/%s.info", (*conf).dbName);
+	fp = fopen(fileName, "w+");
+	fprintf(fp, "recCnt:%d\n", (*info).recCnt);
+	fprintf(fp, "currentFile:%d\n", (*info).curFile);
 	fclose(fp);
 }
 
@@ -167,9 +197,10 @@ void readIndex(DATA *data[], Conf *config)
 
 		count++;	
 	}
+	fclose(fp_index);
 }
 
-void writeIndex(DATA *data[], Conf *conf)
+void writeIndex(DATA *data[], Conf *conf, INFO *info)
 {
 	FILE *fp;
 	char fileName[50] = {'\0'};
@@ -177,7 +208,7 @@ void writeIndex(DATA *data[], Conf *conf)
 
 	sprintf(fileName, "./data/db/%s.index", (*conf).dbName);
 	fp = fopen(fileName, "w+");
-	for( i = 0; i <= (*conf).recCnt; i++)
+	for( i = 0; i < (*info).recCnt; i++)
 	{
 		 fprintf(fp, "@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
 	}

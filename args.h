@@ -10,22 +10,18 @@ typedef struct Config
 {
 	char dbName[20];
 	char *createTime;
-	int recCnt;
 	int fileSize;
-	int curFile;
 	int maxBuffer;
 	int patCnt;
 	char pat[50][20]; //field pattern
 	char titlePat[20];
 } Conf;
 
-/*typedef struct Result
+typedef struct Info
 {
-	int rid;
-	int score;
-	int fileID;
-	int offset;
-} RES;*/
+	int recCnt;
+	int curFile;
+} INFO;
 
 typedef struct Data
 {
@@ -38,12 +34,14 @@ typedef struct Data
 void showHelp();
 int readConfig(char *db, Conf *config);
 void writeConfig(Conf *config);
+void readInfo(char *db, INFO *info);
+void writeInfo(INFO *info, Conf *config);
 void readIndex(DATA *data[], Conf *config);
-void writeIndex(DATA *data[], Conf *config);
+void writeIndex(DATA *data[], Conf *config, INFO *info);
 void createDB(char *db, char *field, char *title);
-void rput(int RID, char *rec, Conf *config);
-void fput(char *recFile, char *recBeg, Conf *config);
-void rget(char *field, char *val, int start, int end, Conf *config);
-void rdel(int rid, Conf *config);
-void rupdate(int rid, char *rec, Conf *config);
+void rput(int RID, char *rec, Conf *config, INFO *info);
+void fput(char *recFile, char *recBeg, Conf *config, INFO *info);
+void rget(char *field, char *val, int start, int end, Conf *config, INFO *info);
+void rdel(int rid, Conf *config, INFO *info);
+void rupdate(int rid, char *rec, Conf *config, INFO *info);
 
