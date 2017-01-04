@@ -370,7 +370,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		i++;
 		ptr++;
 	}
-	printf("key:%s\n", key);
 	if(strstr(val, "+") != NULL)
 	{
 		flag_must = 1;
@@ -383,7 +382,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			i++;
 			findPtr++;
 		}
-		printf("must:%s\n", must);
 	}
 	if(strstr(val, "!") != NULL)
 	{
@@ -397,7 +395,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			i++;
 			findPtr++;
 		}
-		printf("must not:%s\n", mustNot);
 	}
 	if(strcmp(field, "rid") == 0) //get rid
 	{
@@ -487,10 +484,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					if(find == 1)
 					{
 						sort(result, total, rid, score); //result structure order by score, save top 200 results
-						/*if((total >= start) && (total < end))
-						{
-							result[total-start] = rid;
-						}*/
 						total++;
 					}
 					flag_ignore = 0;
@@ -572,11 +565,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			{
 				sort(result, total, rid, score); //result structure order by score, save top 200 results
 				total++;
-				/*if((total >= start) && (total < end))
-				{
-					result[total-start] = rid;
-				}
-				total++;*/
 			}
 			fclose(fp);
 		}
