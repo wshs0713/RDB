@@ -31,6 +31,12 @@ typedef struct Data
 	int offset;
 } DATA;
 
+typedef struct Result
+{
+	int rid;
+	int score;
+} RES;
+
 void showHelp();
 int readConfig(char *db, Conf *config);
 void writeConfig(Conf *config);
@@ -38,6 +44,7 @@ void readInfo(char *db, INFO *info);
 void writeInfo(INFO *info, Conf *config);
 void readIndex(DATA *data[], Conf *config);
 void writeIndex(DATA *data[], Conf *config, INFO *info);
+void sort(RES result[200], int total, int rid, int score);
 void createDB(char *db, char *field, char *title);
 void rput(int RID, char *rec, Conf *config, INFO *info);
 void fput(char *recFile, char *recBeg, Conf *config, INFO *info);

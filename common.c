@@ -160,25 +160,21 @@ void readIndex(DATA *data[], Conf *config)
 		while(*idStart != ':') //pointer to rid start
 			idStart++;
 		idStart++;
-	//	printf("idStart:%s", idStart);
 		
 		delStart = idStart;
 		while(*delStart != ',') //pointer to del start
 			delStart++;
 		delStart++;
-	//	printf("delStart:%s", delStart);
 		
 		fileStart = delStart;
 		while(*fileStart != ',') //pointer to file start
 			fileStart++;
 		fileStart++;
-	//	printf("fileStart:%s", fileStart);
 
 		offsetStart = fileStart;
 		while(*offsetStart != ',') //pointer to offset start
 			offsetStart++;
 		offsetStart++;
-	//	printf("offsetStart:%s", offsetStart);
 		
 		//rid
 		strncpy(buf, idStart, (delStart - idStart)-1); //-1: ,
@@ -213,4 +209,33 @@ void writeIndex(DATA *data[], Conf *conf, INFO *info)
 		 fprintf(fp, "@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
 	}
 	fclose(fp);
+}
+void sort(RES result[200], int total, int rid, int score)
+{
+	//sort result, order by score
+	int i, end = 0, pos = 0;
+
+	if(total > 200)
+		end = 200;
+	else
+		end = total;
+
+	if(score > result[end-1].score)
+	{
+		for(i = 0; i < end; i++)
+		{
+			if(score > result[i].score)
+			{
+				pos = i;
+				break;
+			}
+		}
+		for(i = end-1; i > pos; i--)
+		{
+			result[i].rid = result[i-1].rid;
+			result[i].score = result[i-1].score;
+		}
+		result[pos].rid = rid;
+		result[pos].score = score;
+	}
 }

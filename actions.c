@@ -320,17 +320,27 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 {
 	FILE *fp;
 	int MAX = (*config).maxBuffer+1;
-	int i, j, value = 0, len = 0, patLen = 0, find = 0, total = 0;
+	int i, j, value = 0, len = 0, patLen = 0;
+	int find = 0, total = 0, step = 0, score = 0;
 	int rid = 0, offset = 0, recOffset = 0;
+	int flag_must = 0, flag_not = 0, flag_ignore = 0;
 	char fileName[40] = {'\0'}, indexFile[50] = {'\0'};
 	char *line, buf[1000] = {'\0'}; //buf: temporally store field name of each line
 	char *ptr, *valPtr, *findPtr;
+	//char and[256] = {'\0'}, or[256] = {'\0'};
+	char key[256] = {'\0'}, must[256] = {'\0'}, mustNot[256] = {'\0'};
 	clock_t t_start, t_end;
 	double take = 0;
-	int result[200];
+	RES result[200];
 	DATA *data;
 
 	data = (DATA *)malloc(((*info).recCnt + 5)*sizeof(DATA));
+	//initialize
+	for(i = 0; i < 200; i++)
+	{
+		result[i].rid = -1;
+		result[i].score = 0;
+	}
 	
 	t_start = clock();
 	readIndex(&data, config);
@@ -346,7 +356,50 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	memset(line, '\0', MAX);
 
 	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
-	if((strlen(field) != 0) && (strcmp(field, "rid") == 0)) //get rid
+	/* boolean search
+		and: &
+		or: ,
+		must: +
+		must not: !
+	*/
+	i = 0;
+	ptr = val;
+	while((*ptr != '&') && (*ptr != ',') && (*ptr != '+') && (*ptr != '!') && (*ptr != '\0'))
+	{
+		key[i] = *ptr;
+		i++;
+		ptr++;
+	}
+	printf("key:%s\n", key);
+	if(strstr(val, "+") != NULL)
+	{
+		flag_must = 1;
+		findPtr = strstr(val, "+"); //point to '+'
+		findPtr++;
+		i = 0;
+		while((*findPtr != '&') && (*findPtr != ',') && (*findPtr != '+') && (*findPtr != '!') && (*findPtr != '\0'))
+		{
+			must[i] = *findPtr;
+			i++;
+			findPtr++;
+		}
+		printf("must:%s\n", must);
+	}
+	if(strstr(val, "!") != NULL)
+	{
+		flag_not = 1;
+		findPtr = strstr(val, "!"); //point to '!'
+		findPtr++;
+		i = 0;
+		while((*findPtr != '&') && (*findPtr != ',') && (*findPtr != '+') && (*findPtr != '!') && (*findPtr != '\0'))
+		{
+			mustNot[i] = *findPtr;
+			i++;
+			findPtr++;
+		}
+		printf("must not:%s\n", mustNot);
+	}
+	if(strcmp(field, "rid") == 0) //get rid
 	{
 		t_start = clock();
 		value = atoi(val);
@@ -415,7 +468,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
 		printf("@Time:%.3lf\n", take);
 	}
-	else
+	else  //not get rid
 	{
 		t_start = clock();
 		//read rdb file, use rgrep/strstr
@@ -425,57 +478,105 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			fp = fopen(fileName, "r");
 			find = 0;
 			findPtr = NULL;
-			offset = 2; //first @\n
+			offset = 0;
 			while(fgets(line, MAX-1, fp))
 			{
+				offset += strlen(line);
 				if(strcmp(line, "@\n") == 0) //record begin in rdb file
 				{
 					if(find == 1)
 					{
-						if((total >= start) && (total < end))
+						sort(result, total, rid, score); //result structure order by score, save top 200 results
+						/*if((total >= start) && (total < end))
 						{
 							result[total-start] = rid;
-						}
+						}*/
 						total++;
 					}
+					flag_ignore = 0;
 					find = 0;
+					score = 0;
 					findPtr = NULL;
 					recOffset = offset;
+					continue;
 				}
 				else if(strncmp(line, "@rid:", 5) == 0)
 				{
 					ptr = line;
 					ptr += 5;
 					rid = atoi(ptr);
+					continue;
 				}
-
-				ptr = line;
-				ptr++; //skip @
-				if(strlen(field) == 0) //full text search
+				if(strncmp(line, (*config).titlePat, strlen((*config).titlePat)) == 0)
 				{
-					findPtr = strstr(line, val);
+					step = 100;
 				}
 				else
 				{
-					if(strncmp(ptr, field, strlen(field)) == 0)
+					step = 10;
+				}
+
+				if((flag_ignore != 1) && (data[rid].del != 1) && (recOffset == data[rid].offset))
+				{
+					ptr = line;
+					ptr++; //skip @
+					if(strlen(field) == 0) //full text search
 					{
-						ptr += strlen(field)+1; //skip field:
-						findPtr = strstr(line, val);
+						if(flag_not == 1)
+						{
+							findPtr = strstr(line, mustNot);
+							if(findPtr != NULL)
+							{
+								findPtr = NULL;
+								flag_ignore = 1; //ignore this record
+								continue;
+							}
+						}
+						if(flag_must == 1)
+						{
+							findPtr = strstr(line, must);
+							while(findPtr != NULL)
+							{
+								find = 1;
+								score += step;
+								findPtr += strlen(must);
+								findPtr = strstr(findPtr, must);
+							}
+						}
+						findPtr = strstr(line, key);
+						while(findPtr != NULL)
+						{
+							find = 1;
+							score += step;
+							findPtr += strlen(key);
+							findPtr = strstr(findPtr, key);
+						}
+					}
+					else
+					{
+						if(strncmp(ptr, field, strlen(field)) == 0)
+						{
+							ptr += strlen(field)+1; //skip field:
+							findPtr = strstr(line, val);
+							while(findPtr != NULL)
+							{
+								score += step;
+								findPtr += strlen(val);
+								findPtr = strstr(findPtr, val);
+							}
+						}
 					}
 				}
-				if((findPtr != NULL) && (data[rid].del != 1) && (recOffset == data[rid].offset))
-				{
-					find = 1;
-				}
-				offset += strlen(line);
 			}
 			if(find == 1) //last record
 			{
-				if((total >= start) && (total < end))
+				sort(result, total, rid, score); //result structure order by score, save top 200 results
+				total++;
+				/*if((total >= start) && (total < end))
 				{
 					result[total-start] = rid;
 				}
-				total++;
+				total++;*/
 			}
 			fclose(fp);
 		}
@@ -486,14 +587,15 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		printf("{\"result\":[");
 		if(total > 0)
 		{
-			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[0]].fileID);
+			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[0].rid].fileID);
 			fp = fopen(fileName, "r");
 			if(fp)
 			{
 				for(i = 0; i < (end-start); i++)
 				{
-					fseek(fp, data[result[i]].offset, SEEK_SET);
+					fseek(fp, data[result[i].rid].offset, SEEK_SET);
 					printf("{");
+					printf("\"score\":\"%d\",", result[i].score);
 					while(fgets(line, MAX-1, fp))
 					{
 						if(strcmp(line, "@\n") == 0)
@@ -532,10 +634,10 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 						}
 						if(i < end-start-1)
 						{
-							if(data[result[i+1]].fileID != data[result[i]].fileID)
+							if(data[result[i+1].rid].fileID != data[result[i].rid].fileID)
 							{
 								fclose(fp);
-								sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[i+1]].fileID);
+								sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[i+1].rid].fileID);
 								fp = fopen(fileName, "r");
 							}
 						}

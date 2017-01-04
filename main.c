@@ -52,17 +52,6 @@ int main(int argc, char *argv[])
 				status = readConfig(argv[2], &config);
 				if(status == 1)
 				{
-					/*printf("dbName:%s\n", config.dbName);
-					printf("createTime:%s\n", config.createTime);
-					printf("fileSize:%d\n", config.fileSize);
-					printf("recCnt:%d\n", config.recCnt);
-					printf("curFile:%d\n", config.curFile);
-					printf("maxBuffer:%d\n", config.maxBuffer);
-					printf("patCnt:%d\n", config.patCnt);
-					printf("pat:");
-					for(i = 0; i < config.patCnt; i++)
-						printf("%s", config.pat[i]);
-					printf("\ntitlePat:%s\n", config.titlePat);*/
 					readInfo(argv[2], &info);
 					if(strcmp(argv[1], "-rput") == 0)
 					{
