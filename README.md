@@ -1,9 +1,14 @@
 # RDB
 ### RDB Backend (C)
-+ make
++ Setup
+```
+make
+```
 
 ### Webpage (Node.js)
-+ Backend
-	+ node server.js
-+ Frontend
-	+ default port: 2888
++ Setup
+```
+npm install -l
+node server.js
+default port: 2888
+```
