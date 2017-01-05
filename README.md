@@ -15,7 +15,7 @@
 	```C
 	./rdb -create [db name] [fields] [title field]
 	/* 
-		fields format: 
+		Fields format: 
 			1. field start with '@'
 			2. field end with ':'
 			3. fields are separated by ','
@@ -28,7 +28,7 @@
 	```C
 	./rdb -rput [db name] [record]
 	/* 
-		record format:
+		Record format:
 			1. field start with '@'
 			2. field and value are separated by ':'
 			3. field-value pairs are seprated by '|'
@@ -48,14 +48,14 @@
 	```C
 	./rdb -rget [db name] [query] [start] [end]
 	/*
-		query format:
+		Default start is 0, end is 10
+		Query format:
 			1. search specific field: field=value
 			2. full text search:
 				a. single keyword: keyword
 				b. must: ^keyword
 				c. must not: !keyword
 				d. or: ,keyword
-		default start is 0, end is 10
 	*/
 	/*
 		For example: 
