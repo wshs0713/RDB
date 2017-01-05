@@ -19,6 +19,7 @@ void createDB(char *db, char *field, char *title)
 	}
 	else
 	{
+		//verify db name
 		ptr = db;
 		while(*ptr != '\0')
 		{
@@ -29,6 +30,7 @@ void createDB(char *db, char *field, char *title)
 			}
 			ptr++;
 		}
+		//verify field name
 		ptr = field;
 		while(*ptr != '\0')
 		{
@@ -39,7 +41,7 @@ void createDB(char *db, char *field, char *title)
 			}
 			ptr++;
 		}
-		if(flag == 1)
+		if(flag == 1) //invalid
 		{
 			printf("Invalid DB name or field name!\n");
 			printf("DB name allow to contain A~Z, a~z and 0~9\n");
@@ -135,7 +137,7 @@ void createDB(char *db, char *field, char *title)
 void rput(int RID, char *rec, Conf *config, INFO *info)
 {
 	FILE *fp, *fp_index;
-	int i, j, dataLen = 0, dataCnt = 0;// patLen = 0;
+	int i, j, dataLen = 0, dataCnt = 0;
 	int rid = 0, offset = 0;
 	char fileName[40] = {'\0'}, indexFile[40] = {'\0'};
 	char *data[50], *tok;
@@ -146,18 +148,21 @@ void rput(int RID, char *rec, Conf *config, INFO *info)
 		sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 		if(access(indexFile, F_OK) != -1)
 		{
-			//get previous rid and offset
-			if(RID == -1)
-				rid = (*info).recCnt + 1;
-			else //update
+			if(RID == -1)					//put new record
+				rid = (*info).recCnt + 1;	//get current rid
+			else							//update
 				rid = RID;
+
+			//get current offset
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*info).curFile);
 			fp = fopen(fileName, "r");
 			fseek(fp, 0, SEEK_END);
-			offset = ftell(fp)+2;
+			offset = ftell(fp)+2; //+2: @\n
 			fclose(fp);
 			printf("rid:%d\n", rid);
 			printf("offset:%d\n", offset);
+
+			//exceed the file size limit, update to db.info
 			if(offset > (*config).fileSize)
 			{
 				(*info).curFile++;
@@ -166,11 +171,16 @@ void rput(int RID, char *rec, Conf *config, INFO *info)
 				printf("new offset:%d", offset);
 				writeInfo(info, config);
 			}
-			if(RID == -1) //new record
+
+			//new record, update to db.index and db.info
+			if(RID == -1)
 			{
 				fp_index = fopen(indexFile, "a");
 				fprintf(fp_index, "@rid:%d,0,%d,%d\n", rid, (*info).curFile, offset);
 				fclose(fp_index);
+				
+				(*info).recCnt++;
+				writeInfo(info, config);
 			}
 
 			//parse input record
@@ -189,18 +199,12 @@ void rput(int RID, char *rec, Conf *config, INFO *info)
 			//open rdb file and write
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*info).curFile);
 			fp = fopen(fileName, "a");
-			fprintf(fp, "@\n@rid:%d\n", rid);
-			
+			fprintf(fp, "@\n@rid:%d\n", rid);	
 			for(j = 0; j< dataCnt; j++)
 				fprintf(fp, "%s\n", data[j]);
-			
-			if(RID == -1) //new record
-			{
-				(*info).recCnt++;
-				writeInfo(info, config);
-			}
-			printf("Success to put record into %s\n", (*config).dbName);
 			fclose(fp);
+
+			printf("Success to put record into %s\n", (*config).dbName);
 			for(i = 0; i < dataCnt; i++)
 				free(data[i]);
 		}
@@ -235,22 +239,27 @@ void fput(char *recFile, char *recBeg, Conf *config, INFO *info)
 
 	if(access(fileName, F_OK) != -1)
 	{
-		fpr = fopen(recFile, "r"); //record file
+		fpr = fopen(recFile, "r");
 		if(!fpr)
 		{
 			printf("record file not exist\n");
 		}
 		else
 		{
+			//get current rid
 			prevRID = (*info).recCnt;
 			rid = (*info).recCnt + 1;
+
+			//get current offset
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*info).curFile);
 			fpw = fopen(fileName, "r");
 			fseek(fpw, 0, SEEK_END);
 			offset = ftell(fpw);
 			printf("rid:%d\n", rid);
 			printf("offset:%d\n", offset);
-			if(offset > (*config).fileSize)
+			
+			//exceed the file size limit, change current file
+			if(offset > (*config).fileSize)	
 			{
 				(*info).curFile++;
 				offset = 0;
@@ -270,12 +279,16 @@ void fput(char *recFile, char *recBeg, Conf *config, INFO *info)
 				if(strncmp(line, recBeg, strlen(recBeg)) == 0)
 				{
 					offset += 2; //start of record @\n
+
+					//exceed the file size limit, change current file
 					if(offset > (*config).fileSize)
 					{
 						(*info).curFile++;
-						offset = 2; //start of record @\n
+						offset = 2; //start of record: @\n
 						printf("curFile:%d\n", (*info).curFile);
 						printf("new offset:%d", offset);
+
+						//open new db file
 						fclose(fpw);
 						sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*info).curFile);
 						fpw = fopen(fileName, "a");
@@ -299,7 +312,10 @@ void fput(char *recFile, char *recBeg, Conf *config, INFO *info)
 			}
 			t_end = clock();
 			take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
+
+			//update db.info
 			writeInfo(info, config);
+
 			printf("Success to put file into %s\n", (*config).dbName);
 			printf("Total record: %d\n", (rid-prevRID-1));
 			printf("Take %.3lf seconds\n", take);
@@ -331,9 +347,14 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	clock_t t_start, t_end;
 	double take = 0;
 	RES result[200];
-	DATA *data;
+	INDEX *index;
 
-	data = (DATA *)malloc(((*info).recCnt + 5)*sizeof(DATA));
+	index = (INDEX *)malloc(((*info).recCnt + 5)*sizeof(INDEX));
+	readIndex(&index, config);
+	
+	line = (char *)malloc(MAX * sizeof(char));
+	memset(line, '\0', MAX);
+	
 	//initialize
 	for(i = 0; i < 200; i++)
 	{
@@ -341,14 +362,6 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		result[i].score = 0;
 	}
 	
-	t_start = clock();
-	readIndex(&data, config);
-	t_end = clock();
-	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
-
-	line = (char *)malloc(MAX * sizeof(char));
-	memset(line, '\0', MAX);
-
 	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 	if(strcmp(field, "rid") == 0) //get rid
 	{
@@ -356,12 +369,12 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		value = atoi(val);
 		if((value >= 0) && (value <= (*info).recCnt))
 		{
-			if(data[value].del != 1)
+			if(index[value].del != 1)
 			{
 				//get record
-				sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[value].fileID);
+				sprintf(fileName, "./data/db/%s_%d", (*config).dbName, index[value].fileID);
 				fp = fopen(fileName, "r");
-				fseek(fp, data[value].offset, SEEK_SET);
+				fseek(fp, index[value].offset, SEEK_SET);
 			
 				printf("{\"result\":[{");
 				while(fgets(line, MAX-1, fp))
@@ -386,7 +399,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					if(find == 1)
 					{
 						ptr = line;
-						ptr++; //skip '@'
+						ptr++;	//skip '@'
 						valPtr = ptr;
 						while((*valPtr != ':') && (*ptr != '\0'))
 							valPtr++;
@@ -422,7 +435,8 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	else  //not get rid
 	{
 		/** parse value **/
-		/* boolean search
+		/* 
+			boolean search
 			or: ,
 			must: ^
 			must not: !
@@ -477,30 +491,31 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		/** end parse value **/
 		
 		t_start = clock();
-		//read rdb file, use rgrep/strstr
 		for( i = 0; i <= (*info).curFile; i++)
 		{
 			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, i);
 			fp = fopen(fileName, "r");
+			offset = 0;
 			find = 0;
 			findPtr = NULL;
-			offset = 0;
 			while(fgets(line, MAX-1, fp))
 			{
 				offset += strlen(line);
-				if(strcmp(line, "@\n") == 0) //record begin in rdb file
+				if(strcmp(line, "@\n") == 0)	//record begin in db file
 				{
-					if(flag_must == 1) //must have keyword
+					if(flag_must == 1)			//must have keyword
 					{
 						if((find != 0) && (findMust != 0))
 						{
-							sort(result, total, rid, score); //result structure order by score, save top 200 results
+							//add to result array of structure, order by score, save top 200 results
+							sort(result, total, rid, score);
 							total++;
 						}
 					}
 					else if(find != 0)
 					{
-						sort(result, total, rid, score); //result structure order by score, save top 200 results
+						//add to result array of structure, order by score, save top 200 results
+						sort(result, total, rid, score);
 						total++;
 					}
 					flag_ignore = 0;
@@ -527,7 +542,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					step = 10;
 				}
 
-				if((flag_ignore != 1) && (data[rid].del != 1) && (recOffset == data[rid].offset))
+				if((flag_ignore != 1) && (index[rid].del != 1) && (recOffset == index[rid].offset))
 				{
 					ptr = line;
 					ptr++; //skip @
@@ -536,11 +551,12 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 						/*priority: ! > + > ,*/
 						if(flag_not == 1)
 						{
+							//if find mustNot keyword, ignore this record
 							findPtr = strstr(line, mustNot);
 							if(findPtr != NULL)
 							{
 								findPtr = NULL;
-								flag_ignore = 1; //ignore this record
+								flag_ignore = 1;
 								find = 0;
 								findMust = 0;
 								continue;
@@ -582,6 +598,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					}
 					else
 					{
+						//specific field search
 						if(strncmp(ptr, field, strlen(field)) == 0)
 						{
 							ptr += strlen(field)+1; //skip field:
@@ -597,13 +614,24 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					}
 				}
 			}
-			if(find == 1) //last record
+			//check last record
+			if(flag_must == 1) //must have keyword
 			{
-				sort(result, total, rid, score); //result structure order by score, save top 200 results
+				if((find != 0) && (findMust != 0))
+				{
+					//add to result array of structure, order by score, save top 200 results
+					sort(result, total, rid, score);
+					total++;
+				}
+			}
+			else if(find != 0)
+			{
+				//add to result array of structure, order by score, save top 200 results
+				sort(result, total, rid, score);
 				total++;
 			}
 			fclose(fp);
-		}
+		}//end of for loop, check all db file
 
 		if(end > total)
 			end = total;
@@ -611,13 +639,13 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		printf("{\"result\":[");
 		if(total > 0)
 		{
-			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[0].rid].fileID);
+			sprintf(fileName, "./data/db/%s_%d", (*config).dbName, index[result[0].rid].fileID);
 			fp = fopen(fileName, "r");
 			if(fp)
 			{
 				for(i = 0; i < (end-start); i++)
 				{
-					fseek(fp, data[result[i].rid].offset, SEEK_SET);
+					fseek(fp, index[result[i].rid].offset, SEEK_SET);
 					printf("{");
 					printf("\"score\":\"%d\",", result[i].score);
 					while(fgets(line, MAX-1, fp))
@@ -639,38 +667,41 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 								break;
 							}
 						}
+						//if match field, output the result
 						if(find == 1)
 						{
 							ptr = line;
 							ptr++;
-							valPtr = line; //get value
+
+							//get value
+							valPtr = line;
 							while((*valPtr != ':') && (*valPtr != '\0'))
 								valPtr++;
 							valPtr++; //skip ':'
 								
 							memset(buf, '\0', 1000);
-							strncpy(buf, ptr, (valPtr-ptr-1)); //-1: ':', field name
-							printf("\"%s\":\"%s\"", buf, valPtr);
+							strncpy(buf, ptr, (valPtr-ptr-1));			//-1: ':', field name
+							printf("\"%s\":\"%s\"", buf, valPtr);		//buf is field name
 
-							ptr = (*config).pat[(*config).patCnt-1]; //record end pattern
-							if(strstr(line, ptr) == NULL)
+							ptr = (*config).pat[(*config).patCnt-1];	//record end pattern
+							if(strstr(line, ptr) == NULL)				//not end of record
 								printf(",");
 						}
 						if(i < end-start-1)
 						{
-							if(data[result[i+1].rid].fileID != data[result[i].rid].fileID)
+							if(index[result[i+1].rid].fileID != index[result[i].rid].fileID)
 							{
 								fclose(fp);
-								sprintf(fileName, "./data/db/%s_%d", (*config).dbName, data[result[i+1].rid].fileID);
+								sprintf(fileName, "./data/db/%s_%d", (*config).dbName, index[result[i+1].rid].fileID);
 								fp = fopen(fileName, "r");
 							}
 						}
 					}
 					printf("}");
-					if(i < end-start-1)
+					if(i < end-start-1) //not the last one result
 						printf(",");
-				}
-			}
+				} //end for
+			} //end if(fp)
 			fclose(fp);
 		}
 		printf("]}\n");
@@ -679,7 +710,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		printf("@Total:%d\n", total);
 		printf("@Time:%.3lf\n", take);
 		free(line);
-		free(data);
+		free(index);
 	}
 }
 
@@ -687,15 +718,15 @@ void rdel(int rid, Conf *config, INFO *info)
 {
 	clock_t t_start, t_end;
 	double take = 0;
-	DATA *data;
-	data = (DATA *)malloc(((*info).recCnt + 5)*sizeof(DATA));
+	INDEX *index;
+	index = (INDEX *)malloc(((*info).recCnt + 5)*sizeof(INDEX));
 	
 	t_start = clock();
-	readIndex(&data, config);
+	readIndex(&index, config);
 	if((rid >= 0) && (rid <= (*info).recCnt))
 	{
-		data[rid].del = 1;
-		writeIndex(&data, config, info);
+		index[rid].del = 1;
+		writeIndex(&index, config, info);
 	}
 	else
 	{
@@ -704,7 +735,7 @@ void rdel(int rid, Conf *config, INFO *info)
 	t_end = clock();
 	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
 	printf("@Time:%.3lf\n", take);
-	free(data);
+	free(index);
 }
 
 void rupdate(int rid, char *rec, Conf *config, INFO *info)
@@ -714,38 +745,40 @@ void rupdate(int rid, char *rec, Conf *config, INFO *info)
 	char fileName[40] = {'\0'};
 	clock_t t_start, t_end;
 	double take = 0;
-	DATA *data;
+	INDEX *index;
 	
 	if((rid >= 0) && (rid <= (*info).recCnt))
 	{
 		t_start = clock();
-		data = (DATA *)malloc(((*info).recCnt + 5)*sizeof(DATA));
-		readIndex(&data, config);
+		index = (INDEX *)malloc(((*info).recCnt + 5)*sizeof(INDEX));
+		readIndex(&index, config);
 	
 		//update offset
 		sprintf(fileName, "./data/db/%s_%d", (*config).dbName, (*info).curFile);
 		fp = fopen(fileName, "r");
 		fseek(fp, 0, SEEK_END);
-		offset = ftell(fp)+2;
+		offset = ftell(fp)+2; //+2: @\n
 		fclose(fp);
+		
+		//exceed the file size limit, update to db.info
 		if(offset > (*config).fileSize)
 		{
 			(*info).curFile++;
 			offset = 2;
 			writeInfo(info, config);
 		}
-		data[rid].del = 0;
-		data[rid].fileID = (*info).curFile;
-		data[rid].offset = offset;
-		writeIndex(&data, config, info);
+		index[rid].del = 0;
+		index[rid].fileID = (*info).curFile;
+		index[rid].offset = offset;
+		writeIndex(&index, config, info);
 		
-		//put rec
+		//put record
 		rput(rid, rec, config, info);
 		
 		t_end = clock();
 		take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
 		printf("@Time:%.3lf\n", take);
-		free(data);
+		free(index);
 	}
 	else
 	{

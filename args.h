@@ -23,13 +23,13 @@ typedef struct Info
 	int curFile;
 } INFO;
 
-typedef struct Data
+typedef struct Index
 {
 	int rid;
 	int del;
 	int fileID;
 	int offset;
-} DATA;
+} INDEX;
 
 typedef struct Result
 {
@@ -42,8 +42,8 @@ int readConfig(char *db, Conf *config);
 void writeConfig(Conf *config);
 void readInfo(char *db, INFO *info);
 void writeInfo(INFO *info, Conf *config);
-void readIndex(DATA *data[], Conf *config);
-void writeIndex(DATA *data[], Conf *config, INFO *info);
+void readIndex(INDEX *index[], Conf *config);
+void writeIndex(INDEX *index[], Conf *config, INFO *info);
 void sort(RES result[200], int total, int rid, int score);
 void createDB(char *db, char *field, char *title);
 void rput(int RID, char *rec, Conf *config, INFO *info);

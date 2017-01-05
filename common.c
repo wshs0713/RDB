@@ -7,13 +7,16 @@ void showHelp()
 	printf("\t-create [db name] [field1,field2] [title field]: create db file and config file\n");
 	printf("\t-rput [db name] [record] : put record into db\n");
 	printf("\t-fput [db name] [record file] [record begin pattern]: read record file and put into db\n");
-	printf("\t-rget [db name] [field=value] [start] [end]: get record by rid/key from db\n");
+	printf("\t-rget [db name] [query] [start] [end]: get record by rid/key from db\n");
 	printf("\t-rdel [db name] [rid]: delete record by rid\n");
 	printf("\t-rupdate [db name] [rid] [record]: update record\n");
 }
 int readConfig(char *db, Conf *conf)
 {
-	//return pattern count
+	/* 
+		if read success, return 1;
+		else, return -1;
+	*/
 	FILE *fp;
 	char fileName[40] = {'\0'}, line[2048] = {'\0'};
 	char *ptr, *tok;
@@ -145,58 +148,62 @@ void writeInfo(INFO *info, Conf *conf)
 	fclose(fp);
 }
 
-void readIndex(DATA *data[], Conf *config)
+void readIndex(INDEX *index[], Conf *config)
 {
+	/*
+		index file format:
+			@rid:xxx,del,fileID,offset
+	*/
 	FILE *fp_index;
 	int count = 0;
 	char line[1024], fileName[40] = {'\0'}, buf[1024] = {'\0'};
 	char *idStart, *delStart, *fileStart, *offsetStart;
 
 	sprintf(fileName, "./data/db/%s.index", (*config).dbName);
-	fp_index = fopen(fileName, "r"); //index file
+	fp_index = fopen(fileName, "r");
 	while(fgets(line, 1024, fp_index))
 	{
 		idStart = line;
-		while(*idStart != ':') //pointer to rid start
+		while(*idStart != ':')		//pointer to rid start
 			idStart++;
 		idStart++;
 		
 		delStart = idStart;
-		while(*delStart != ',') //pointer to del start
+		while(*delStart != ',')		//pointer to del start
 			delStart++;
 		delStart++;
 		
 		fileStart = delStart;
-		while(*fileStart != ',') //pointer to file start
+		while(*fileStart != ',')	//pointer to file start
 			fileStart++;
 		fileStart++;
 
 		offsetStart = fileStart;
-		while(*offsetStart != ',') //pointer to offset start
+		while(*offsetStart != ',')	//pointer to offset start
 			offsetStart++;
 		offsetStart++;
 		
 		//rid
 		strncpy(buf, idStart, (delStart - idStart)-1); //-1: ,
-		(*data)[count].rid = atoi(buf);
+		(*index)[count].rid = atoi(buf);
 		memset(buf, '\0', 1024);
 		//del	
 		strncpy(buf, delStart, (fileStart - delStart)-1); //-1: ,
-		(*data)[count].del = atoi(buf);
+		(*index)[count].del = atoi(buf);
 		memset(buf, '\0', 1024);
 		//fileID
 		strncpy(buf, fileStart, (offsetStart - fileStart)-1); //-1: ,
-		(*data)[count].fileID = atoi(buf);
+		(*index)[count].fileID = atoi(buf);
 		memset(buf, '\0', 1024);
 		//offset
-		(*data)[count].offset = atoi(offsetStart);
+		(*index)[count].offset = atoi(offsetStart);
 
 		count++;	
 	}
 	fclose(fp_index);
 }
 
-void writeIndex(DATA *data[], Conf *conf, INFO *info)
+void writeIndex(INDEX *index[], Conf *conf, INFO *info)
 {
 	FILE *fp;
 	char fileName[50] = {'\0'};
@@ -206,13 +213,14 @@ void writeIndex(DATA *data[], Conf *conf, INFO *info)
 	fp = fopen(fileName, "w+");
 	for( i = 0; i < (*info).recCnt; i++)
 	{
-		 fprintf(fp, "@rid:%d,%d,%d,%d\n", (*data)[i].rid, (*data)[i].del, (*data)[i].fileID, (*data)[i].offset);
+		//index file format: @rid:xxx,del,fileID,offset
+		fprintf(fp, "@rid:%d,%d,%d,%d\n", (*index)[i].rid, (*index)[i].del, (*index)[i].fileID, (*index)[i].offset);
 	}
 	fclose(fp);
 }
 void sort(RES result[200], int total, int rid, int score)
 {
-	//sort result, order by score
+	/*add to result array of structure, order by score, save top 200 results*/
 	int i, end = 0, pos = 0;
 
 	if(total > 200)
