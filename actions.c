@@ -345,70 +345,11 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	readIndex(&data, config);
 	t_end = clock();
 	take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
-	//printf("Time:%.3lf\n", take);
-	/*for(i = 0; i <= (*config).recCnt; i++)
-	{
-		printf("@rid:%d,%d,%d,%d\n", data[i].rid, data[i].del, data[i].fileID, data[i].offset);
-	}*/
 
 	line = (char *)malloc(MAX * sizeof(char));
 	memset(line, '\0', MAX);
 
 	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
-	/* boolean search
-		or: ,
-		must: ^
-		must not: !
-	*/
-	/** parse value **/
-	i = 0;
-	ptr = val;
-	while((*ptr != ',') && (*ptr != '^') && (*ptr != '!') && (*ptr != '\0'))
-	{
-		key[i] = *ptr;
-		i++;
-		ptr++;
-	}
-	if(strstr(val, ",") != NULL)
-	{
-		flag_or = 1;
-		findPtr = strstr(val, ","); //point to ','
-		findPtr++;
-		i = 0;
-		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
-		{
-			or[i] = *findPtr;
-			i++;
-			findPtr++;
-		}
-	}
-	if(strstr(val, "^") != NULL)
-	{
-		flag_must = 1;
-		findPtr = strstr(val, "^"); //point to '^'
-		findPtr++;
-		i = 0;
-		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
-		{
-			must[i] = *findPtr;
-			i++;
-			findPtr++;
-		}
-	}
-	if(strstr(val, "!") != NULL)
-	{
-		flag_not = 1;
-		findPtr = strstr(val, "!"); //point to '!'
-		findPtr++;
-		i = 0;
-		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
-		{
-			mustNot[i] = *findPtr;
-			i++;
-			findPtr++;
-		}
-	}
-	/** end parse value **/
 	if(strcmp(field, "rid") == 0) //get rid
 	{
 		t_start = clock();
@@ -480,6 +421,61 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	}
 	else  //not get rid
 	{
+		/** parse value **/
+		/* boolean search
+			or: ,
+			must: ^
+			must not: !
+		*/
+		i = 0;
+		ptr = val;
+		while((*ptr != ',') && (*ptr != '^') && (*ptr != '!') && (*ptr != '\0'))
+		{
+			key[i] = *ptr;
+			i++;
+			ptr++;
+		}
+		if(strstr(val, ",") != NULL)
+		{
+			flag_or = 1;
+			findPtr = strstr(val, ","); //point to ','
+			findPtr++;
+			i = 0;
+			while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
+			{
+				or[i] = *findPtr;
+				i++;
+				findPtr++;
+			}
+		}
+		if(strstr(val, "^") != NULL)
+		{
+			flag_must = 1;
+			findPtr = strstr(val, "^"); //point to '^'
+			findPtr++;
+			i = 0;
+			while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
+			{
+				must[i] = *findPtr;
+				i++;
+				findPtr++;
+			}
+		}
+		if(strstr(val, "!") != NULL)
+		{
+			flag_not = 1;
+			findPtr = strstr(val, "!"); //point to '!'
+			findPtr++;
+			i = 0;
+			while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
+			{
+				mustNot[i] = *findPtr;
+				i++;
+				findPtr++;
+			}
+		}
+		/** end parse value **/
+		
 		t_start = clock();
 		//read rdb file, use rgrep/strstr
 		for( i = 0; i <= (*info).curFile; i++)
@@ -565,6 +561,8 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 						if(flag_or == 1)
 						{
 							findPtr = strstr(line, or);
+							if(findPtr != NULL)
+								find++;
 							while(findPtr != NULL)
 							{
 								score += step;
