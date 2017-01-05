@@ -88,8 +88,8 @@
 npm install -l
 ```
 + Modify default ip and port in:
-	+ public/search.html
-	+ views/result.ejs
+	+ RDB/public/search.html (line 17)
+	+ RDB/views/result.ejs (line 17)
 	+ Default port: 2888
 
 + Start
