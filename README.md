@@ -1,7 +1,10 @@
 # RDB
 ### RDB Backend (C)
 + Setup
-	+ Create database path: RDB/data/db
+	+ Create db directory for storing data, info, index and config file.
+	```C
+	path: data/db
+	```
 	+ Makefile
 	```
 	make
@@ -91,8 +94,8 @@
 npm install -l
 ```
 + Modify default ip and port in:
-	+ RDB/public/search.html (line 17)
-	+ RDB/views/result.ejs (line 17)
+	+ public/search.html (line 17)
+	+ views/result.ejs (line 17)
 	+ Default port: 2888
 
 + Start
