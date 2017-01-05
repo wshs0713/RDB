@@ -19,9 +19,9 @@
 			1. field start with '@'
 			2. field end with ':'
 			3. fields are separated by ','
-	*/
-	/*
-		For example: ./rdb -create "rdb" "@rid:,@U:,@T:,@B:" "@T:"
+		
+		For example: 
+			./rdb -create "rdb" "@rid:,@U:,@T:,@B:" "@T:"
 	*/
 	```
 	+ rput: put a record
@@ -32,16 +32,17 @@
 			1. field start with '@'
 			2. field and value are separated by ':'
 			3. field-value pairs are seprated by '|'
-	*/
-	/*
-		For example: ./rdb -rput "rdb" "@U:http:www.cs.ccu.edu.tw|@T:CCU CSIE|@B:Web page"
+		
+		For example: 
+			./rdb -rput "rdb" "@U:http:www.cs.ccu.edu.tw|@T:CCU CSIE|@B:Web page"
 	*/
 	```
 	+ fput
 	```C
 	./rdb -fput [db name] [record file] [record begin pattern]
 	/*
-		For example: ./rdb -fput "rdb" "data.rec" "@GAISRec:"
+		For example: 
+			./rdb -fput "rdb" "data.rec" "@GAISRec:"
 	*/
 	```
 	+ rget
@@ -56,8 +57,7 @@
 				b. must: ^keyword
 				c. must not: !keyword
 				d. or: ,keyword
-	*/
-	/*
+		
 		For example: 
 			1. ./rdb -rget "rdb" "蔡英文" 0 10
 			2. ./rdb -rget "rdb" "蔡英文,柯文哲" 0 10
@@ -70,15 +70,18 @@
 	```C
 	./rdb -rdel [db name] [rid]
 	/*
-		For example: ./rdb -rdel "rdb" "rid=123"
+		For example: 
+			./rdb -rdel "rdb" "rid=123"
 	*/
 	```
 	+ rupdate
 	```C
 	./rdb -rupdate [db name] [rid] [record]
-	//record format is the same with rput.
 	/*
-		For example: ./rdb -rupdate "rdb" "rid=123" "@U:http:www.cs.ccu.edu.tw|@T:CCU CSIE|@B:Web page"
+		Record format is the same with rput.
+		
+		For example: 
+			./rdb -rupdate "rdb" "rid=123" "@U:http:www.cs.ccu.edu.tw|@T:CCU CSIE|@B:Web page"
 	*/
 	```
 
