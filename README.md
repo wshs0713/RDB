@@ -1,7 +1,7 @@
 # RDB
 ### RDB Backend (C)
 + Setup
-	+ Create database path: [root_dir]/data/db
+	+ Create database path: RDB/data/db
 	+ Makefile
 	```
 	make
@@ -47,9 +47,9 @@
 			1. search specific field: field=value
 			2. full text search:
 				a. single keyword: keyword
-				b. must: ^value
-				c. must not: !value
-				d. or: ,value
+				b. must: ^keyword
+				c. must not: !keyword
+				d. or: ,keyword
 	*/
 	```
 	+ rdelete
