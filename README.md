@@ -46,9 +46,10 @@
 		query format:
 			1. search specific field: field=value
 			2. full text search:
-				a. single keyword: value
-				b. must: +value
+				a. single keyword: keyword
+				b. must: ^value
 				c. must not: !value
+				d. or: ,value
 	*/
 	```
 	+ rdelete

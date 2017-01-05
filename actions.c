@@ -321,14 +321,13 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 	FILE *fp;
 	int MAX = (*config).maxBuffer+1;
 	int i, j, value = 0, len = 0, patLen = 0;
-	int find = 0, total = 0, step = 0, score = 0;
+	int find = 0, findMust = 0, total = 0, step = 0, score = 0;
 	int rid = 0, offset = 0, recOffset = 0;
-	int flag_must = 0, flag_not = 0, flag_ignore = 0;
+	int flag_or = 0, flag_must = 0, flag_not = 0, flag_ignore = 0;
 	char fileName[40] = {'\0'}, indexFile[50] = {'\0'};
 	char *line, buf[1000] = {'\0'}; //buf: temporally store field name of each line
 	char *ptr, *valPtr, *findPtr;
-	//char and[256] = {'\0'}, or[256] = {'\0'};
-	char key[256] = {'\0'}, must[256] = {'\0'}, mustNot[256] = {'\0'};
+	char key[256] = {'\0'}, or[256] = {'\0'}, must[256] = {'\0'}, mustNot[256] = {'\0'};
 	clock_t t_start, t_end;
 	double take = 0;
 	RES result[200];
@@ -357,26 +356,39 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 
 	sprintf(indexFile, "./data/db/%s.index", (*config).dbName);
 	/* boolean search
-		and: &
 		or: ,
-		must: +
+		must: ^
 		must not: !
 	*/
+	/** parse value **/
 	i = 0;
 	ptr = val;
-	while((*ptr != '&') && (*ptr != ',') && (*ptr != '+') && (*ptr != '!') && (*ptr != '\0'))
+	while((*ptr != ',') && (*ptr != '^') && (*ptr != '!') && (*ptr != '\0'))
 	{
 		key[i] = *ptr;
 		i++;
 		ptr++;
 	}
-	if(strstr(val, "+") != NULL)
+	if(strstr(val, ",") != NULL)
 	{
-		flag_must = 1;
-		findPtr = strstr(val, "+"); //point to '+'
+		flag_or = 1;
+		findPtr = strstr(val, ","); //point to ','
 		findPtr++;
 		i = 0;
-		while((*findPtr != '&') && (*findPtr != ',') && (*findPtr != '+') && (*findPtr != '!') && (*findPtr != '\0'))
+		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
+		{
+			or[i] = *findPtr;
+			i++;
+			findPtr++;
+		}
+	}
+	if(strstr(val, "^") != NULL)
+	{
+		flag_must = 1;
+		findPtr = strstr(val, "^"); //point to '^'
+		findPtr++;
+		i = 0;
+		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
 		{
 			must[i] = *findPtr;
 			i++;
@@ -389,13 +401,14 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		findPtr = strstr(val, "!"); //point to '!'
 		findPtr++;
 		i = 0;
-		while((*findPtr != '&') && (*findPtr != ',') && (*findPtr != '+') && (*findPtr != '!') && (*findPtr != '\0'))
+		while((*findPtr != ',') && (*findPtr != '^') && (*findPtr != '!') && (*findPtr != '\0'))
 		{
 			mustNot[i] = *findPtr;
 			i++;
 			findPtr++;
 		}
 	}
+	/** end parse value **/
 	if(strcmp(field, "rid") == 0) //get rid
 	{
 		t_start = clock();
@@ -481,13 +494,22 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 				offset += strlen(line);
 				if(strcmp(line, "@\n") == 0) //record begin in rdb file
 				{
-					if(find == 1)
+					if(flag_must == 1) //must have keyword
+					{
+						if((find != 0) && (findMust != 0))
+						{
+							sort(result, total, rid, score); //result structure order by score, save top 200 results
+							total++;
+						}
+					}
+					else if(find != 0)
 					{
 						sort(result, total, rid, score); //result structure order by score, save top 200 results
 						total++;
 					}
 					flag_ignore = 0;
 					find = 0;
+					findMust = 0;
 					score = 0;
 					findPtr = NULL;
 					recOffset = offset;
@@ -515,6 +537,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 					ptr++; //skip @
 					if(strlen(field) == 0) //full text search
 					{
+						/*priority: ! > + > ,*/
 						if(flag_not == 1)
 						{
 							findPtr = strstr(line, mustNot);
@@ -522,24 +545,38 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 							{
 								findPtr = NULL;
 								flag_ignore = 1; //ignore this record
+								find = 0;
+								findMust = 0;
 								continue;
 							}
 						}
 						if(flag_must == 1)
 						{
 							findPtr = strstr(line, must);
+							if(findPtr != NULL)
+								findMust++;
 							while(findPtr != NULL)
 							{
-								find = 1;
 								score += step;
 								findPtr += strlen(must);
 								findPtr = strstr(findPtr, must);
 							}
 						}
+						if(flag_or == 1)
+						{
+							findPtr = strstr(line, or);
+							while(findPtr != NULL)
+							{
+								score += step;
+								findPtr += strlen(or);
+								findPtr = strstr(findPtr, or);
+							}
+						}
 						findPtr = strstr(line, key);
+						if(findPtr != NULL)
+							find++;
 						while(findPtr != NULL)
 						{
-							find = 1;
 							score += step;
 							findPtr += strlen(key);
 							findPtr = strstr(findPtr, key);
@@ -553,6 +590,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 							findPtr = strstr(line, val);
 							while(findPtr != NULL)
 							{
+								find = 1;
 								score += step;
 								findPtr += strlen(val);
 								findPtr = strstr(findPtr, val);
