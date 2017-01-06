@@ -3,9 +3,9 @@
 + Setup
 	+ Create db directory for storing data, info, index and config file.
 	```C
-	path: data/db
+	mkdir -R data/db
 	```
-	+ Makefile
+	+ Compile
 	```
 	make
 	```
