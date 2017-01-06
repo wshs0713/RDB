@@ -3,7 +3,7 @@
 + Setup
 	+ Create db directory for storing data, info, index and config file.
 	```C
-	mkdir -R data/db
+	mkdir -p data/db
 	```
 	+ Compile
 	```
