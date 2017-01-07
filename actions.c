@@ -413,24 +413,25 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 							printf(",");
 					}
 				}
-				printf("}]}\n");
-				printf("@Total:1\n");
+				printf("}],");
+				printf("\"total\":1,");
 				fclose(fp);
 			}
 			else
 			{
-				printf("{\"result\":[]}\n");
-				printf("@Total:0\n");
+				printf("{\"result\":[],");
+				printf("\"total\":0,");
 			}
 		}
 		else
 		{
-			printf("{\"result\":[]}\n");
-			printf("@Total:0\n");
+			printf("{\"result\":[],");
+			printf("\"total\":0,");
 		}
 		t_end = clock();
 		take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
-		printf("@Time:%.3lf\n", take);
+		printf("\"time\":%.3lf", take);
+		printf("}\n");
 	}
 	else  //not get rid
 	{
@@ -704,11 +705,12 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			} //end if(fp)
 			fclose(fp);
 		}
-		printf("]}\n");
+		printf("],");
 		t_end = clock();
 		take = (double)(t_end - t_start)/CLOCKS_PER_SEC;
-		printf("@Total:%d\n", total);
-		printf("@Time:%.3lf\n", take);
+		printf("\"total\":%d,", total);
+		printf("\"time\":%.3lf", take);
+		printf("}\n");
 		free(line);
 		free(index);
 	}
