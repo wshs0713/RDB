@@ -110,11 +110,11 @@ function highlight(key, record)
 			//highlight
 			for(j = 0; j < mKeyLen; j++)
 			{
-				var objRe = new RegExp(mKeys[j], "g");
-				title = title.replace(objRe, "<high>"+mKeys[j]+"</high>");
+				var objReg = new RegExp(mKeys[j], "g");
+				title = title.replace(objReg, "<high>"+mKeys[j]+"</high>");
 				record["result"][i].T = title;
 
-				content = content.replace(objRe, "<high>"+mKeys[j]+"</high>");
+				content = content.replace(objReg, "<high>"+mKeys[j]+"</high>");
 				record["result"][i].B = content;
 				
 				if((i >= recLen-1) && (j >= mKeyLen-1))
