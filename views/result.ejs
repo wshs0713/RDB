@@ -42,7 +42,9 @@
 
                     for(i = start; i < end; i++) { %>
                         <div class="panel panel-info">
-                            <div id="<%= record['result'][i].rid %>" class="panel-heading res-title"><a href="<%= record['result'][i].U %>" target="_blank"><%- record["result"][i].T %></a></div>
+                            <div id="<%= record['result'][i].rid %>" class="panel-heading res-title">
+								<a href="<%= record['result'][i].U %>" target="_blank"><%- record["result"][i].T %></a>
+							</div>
                             <div class="panel-body">
                                 <%- record["result"][i].B %>
                             </div>
@@ -50,7 +52,7 @@
                 <%  }
                 } %>
             </div>
-        </div>       
+        </div> 
         <% if (pageCount > 1) { 
             if(pageCount > 10)
                 pageCount = 10;
@@ -83,7 +85,7 @@
                     <% } %>
                 </ul>
             </div>
-            </div>
+        </div>
         <% } %>
     </body>
 </html>
