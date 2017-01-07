@@ -19,7 +19,6 @@ app.get('/page', function(req, res) {
         var currentPage = req.query.page;
         var from = (Number(currentPage) - 1) * 10;
         var to = Number(currentPage)*10;
-        //var currentPage = Number(to) / Number(pageSize);
         
         getRecord(res, key, from, to, currentPage);
     }
@@ -53,48 +52,29 @@ function getRecord(res, key, from, to, currentPage) {
 
     exec(cmd, function(err, out, code) {
         /*
-            result JSON
-            @Total:
-            @Time:
+            result JSON format
         */
-        line = out.split(/\n/);
-        size = line.length;
-        for( i = 0; i < size-1; i++)
-        {
-            if(line[i].indexOf("@Total:")!= -1)
-            {
-                buf = line[i].split("@Total:");
-                total = Number(buf[1]);
-            }
-            else if(line[i].indexOf("@Time:")!= -1)
-            {
-                buf = line[i].split("@Time:");
-                time = buf[1];
-            }
-            else
-            {
-                record = JSON.parse(line[i]);
-                var len = record["result"].length;
-                //console.log(len);
-                for(j = 0; j < len; j++)
-                {
-                    content = (record["result"][j].B).replace(/\s+/gi, " ");
-                    if (content.length > 300) {
-                        content = content.substring(0, 300);
-                        content += "...";
-                        record["result"][j].B = content;
-                    }
-                }
-            }
-            if( i >= size - 2)
-            {
-                pageCount = Math.ceil(Number(total) / Number(pageSize));
-                console.log("Total:" + total);
-                console.log("Time:" + time);
-                console.log("pageCount:" + pageCount);
-                res.render('result', { keyword: key, record: record, total: total, pageCount: pageCount, currentPage: currentPage, time: time });
-            }
-        }
+        record = JSON.parse(out);
+		var time = record["time"];
+		var total = record["total"];
+        pageCount = Math.ceil(Number(total) / Number(pageSize));
         
+		console.log("Total:" + total);
+        console.log("Time:" + time);
+        console.log("pageCount:" + pageCount);
+                
+		var len = record["result"].length;
+        for(i = 0; i < len; i++)
+        {
+			content = (record["result"][i].B).replace(/\s+/gi, " ");
+            if (content.length > 300) 
+			{
+                content = content.substring(0, 300);
+                content += "...";
+                record["result"][i].B = content;
+            }
+			if(i >= len-1)
+				res.render('result', { keyword: key, record: record, pageCount: pageCount, currentPage: currentPage});
+        }
     });
 }
