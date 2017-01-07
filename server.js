@@ -35,7 +35,7 @@ app.post('/search', urlencodeParser, function(req, res) {
     getRecord(res, key, from, to, currentPage);
 })
 
-var server = app.listen(2888, function() {
+var server = app.listen(2888, "127.0.0.1", function() {
     var host = server.address().address;
     var port = server.address().port;
     console.log("Listening at http://%s:%s", host, port);
