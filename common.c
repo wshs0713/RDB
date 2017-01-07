@@ -223,27 +223,35 @@ void sort(RES result[200], int total, int rid, int score)
 	/*add to result array of structure, order by score, save top 200 results*/
 	int i, end = 0, pos = 0;
 
-	if(total > 200)
-		end = 200;
-	else
-		end = total;
-
-	if(score > result[end-1].score)
+	if(total == 0)
 	{
-		for(i = 0; i < end; i++)
+		result[0].rid = rid;
+		result[0].score = score;
+	}
+	else 
+	{
+		if(total > 200)
+			end = 200;
+		else
+			end = total;
+
+		if(score > result[end-1].score)
 		{
-			if(score > result[i].score)
+			for(i = 0; i < end; i++)
 			{
-				pos = i;
-				break;
+				if(score > result[i].score)
+				{
+					pos = i;
+					break;
+				}
 			}
+			for(i = end-1; i > pos; i--)
+			{
+				result[i].rid = result[i-1].rid;
+				result[i].score = result[i-1].score;
+			}
+			result[pos].rid = rid;
+			result[pos].score = score;
 		}
-		for(i = end-1; i > pos; i--)
-		{
-			result[i].rid = result[i-1].rid;
-			result[i].score = result[i-1].score;
-		}
-		result[pos].rid = rid;
-		result[pos].score = score;
 	}
 }
