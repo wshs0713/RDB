@@ -10,18 +10,19 @@ app.set('view engine', 'ejs');
 app.use(express.static(__dirname +'/public'));
 
 app.get('/', function(req, res) {
-    res.sendFile(__dirname + "/public/search.html");
+	res.sendFile(__dirname + "/public/search.html");
 });
 
 app.get('/page', function(req, res) {
-    if (typeof req.query.page !== 'undefined') {
-        var key = req.query.key;
-        var currentPage = req.query.page;
-        var from = (Number(currentPage) - 1) * 10;
-        var to = Number(currentPage)*10;
-        
-        getRecord(res, key, from, to, currentPage);
-    }
+	if (typeof req.query.page !== 'undefined')
+	{
+		var key = req.query.key;
+		var currentPage = req.query.page;
+		var from = (Number(currentPage) - 1) * 10;
+		var to = Number(currentPage)*10;
+
+		getRecord(res, key, from, to, currentPage);
+	}
 });
 
 app.post('/search', urlencodeParser, function(req, res) {
@@ -44,37 +45,47 @@ var server = app.listen(2888, function() {
 function getRecord(res, key, from, to, currentPage) {
     var record = [];
     var line, size, total, time;
-    var pageCount, pageSize = 10;  
+    var pageCount, pageSize = 10;
     var i, buf, ocntent;
 
     var cmd = './rdb -rget "rdb" "' + key + '" "' + from + '" "' + to + '"';
     console.log("rdb: " + cmd);
 
     exec(cmd, function(err, out, code) {
-        /*
-            result JSON format
-        */
-        record = JSON.parse(out);
+		/*
+			result JSON format:
+			{
+				"result":[{
+					"rid":"record id",
+					"U":"url",
+					"T":"title",
+					"B":"body"
+				}],
+				"time":"time",
+				"total":"total result"
+			}
+		*/
+		record = JSON.parse(out);
 		var time = record["time"];
 		var total = record["total"];
-        pageCount = Math.ceil(Number(total) / Number(pageSize));
-        
+		pageCount = Math.ceil(Number(total) / Number(pageSize));
+
 		console.log("Total:" + total);
-        console.log("Time:" + time);
-        console.log("pageCount:" + pageCount);
-                
+		console.log("Time:" + time);
+		console.log("pageCount:" + pageCount);
+
 		var len = record["result"].length;
-        for(i = 0; i < len; i++)
-        {
+		for(i = 0; i < len; i++)
+		{
 			content = (record["result"][i].B).replace(/\s+/gi, " ");
-            if (content.length > 300) 
+			if (content.length > 300)
 			{
-                content = content.substring(0, 300);
-                content += "...";
-                record["result"][i].B = content;
-            }
+				content = content.substring(0, 300);
+				content += "...";
+				record["result"][i].B = content;
+			}
 			if(i >= len-1)
 				res.render('result', { keyword: key, record: record, pageCount: pageCount, currentPage: currentPage});
-        }
-    });
+		}
+	});
 }
