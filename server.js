@@ -74,18 +74,52 @@ function getRecord(res, key, from, to, currentPage) {
 		console.log("Time:" + time);
 		console.log("pageCount:" + pageCount);
 
-		var len = record["result"].length;
-		for(i = 0; i < len; i++)
+		highlight(key, record).then(function(result){
+			res.render('result', { keyword: key, record: result, pageCount: pageCount, currentPage: currentPage});
+		})
+	});
+}
+function highlight(key, record)
+{
+	return new Promise(function(resolve) {
+		
+		//parse multi-keys
+		mKeys = [];
+		if((key.indexOf("!") != -1) || (key.indexOf(",") != -1) || (key.indexOf("^") != -1))
 		{
+			mKeys = key.split(/,|!|\^/);
+		}
+		else
+		{
+			mKeys.push(key);
+		}
+		mKeyLen = mKeys.length;
+		console.log("mKeys length:" + mKeyLen);
+		
+		var recLen = record["result"].length;
+		for(i = 0; i < recLen; i++)
+		{
+			title = record["result"][i].T;
 			content = (record["result"][i].B).replace(/\s+/gi, " ");
 			if (content.length > 300)
 			{
 				content = content.substring(0, 300);
 				content += "...";
-				record["result"][i].B = content;
 			}
-			if(i >= len-1)
-				res.render('result', { keyword: key, record: record, pageCount: pageCount, currentPage: currentPage});
-		}
+			
+			//highlight
+			for(j = 0; j < mKeyLen; j++)
+			{
+				var objRe = new RegExp(mKeys[j], "g");
+				title = title.replace(objRe, "<high>"+mKeys[j]+"</high>");
+				record["result"][i].T = title;
+
+				content = content.replace(objRe, "<high>"+mKeys[j]+"</high>");
+				record["result"][i].B = content;
+				
+				if((i >= recLen-1) && (j >= mKeyLen-1))
+					resolve(record);
+			}
+		}		
 	});
 }
