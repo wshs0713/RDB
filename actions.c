@@ -255,6 +255,7 @@ void fput(char *recFile, char *recBeg, Conf *config, INFO *info)
 			fpw = fopen(fileName, "r");
 			fseek(fpw, 0, SEEK_END);
 			offset = ftell(fpw);
+			fclose(fpw);
 			printf("rid:%d\n", rid);
 			printf("offset:%d\n", offset);
 			
@@ -266,7 +267,6 @@ void fput(char *recFile, char *recBeg, Conf *config, INFO *info)
 				printf("curFile:%d\n", (*info).curFile);
 				printf("new offset:%d", offset);
 			}
-			fclose(fpw);
 
 			//read record file
 			t_start = clock();
