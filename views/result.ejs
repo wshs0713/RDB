@@ -14,7 +14,7 @@
 </head>
     <body>
     	<div class="search-bar">
-            <form class="navbar-form navbar-left" role="search" action="http://140.123.101.166:2888/search" method="POST">
+            <form class="navbar-form navbar-left" role="search" action="http://140.123.101.27:2888/search" method="POST">
                 <div class="form-group input-group">
                     <input type="text" class="form-control" placeholder="Keyword" size="50" name="key" value="<%= keyword %>">
                 </div>
@@ -23,12 +23,14 @@
         </div>
         <div class="time">
             <p>
-                <h3>Find <%= total %> results, take <%= time %> seconds </h3>
+                <h3>Find <%= record['total'] %> results, take <%= record['time'] %> seconds </h3>
             </p>
         </div>
         <div class="result">
             <div class="res">
-                <% if( total > 0)
+                <% 
+				var total = record['total'];
+				if( total > 0)
                 {
                     var i;
                     var start = 0;
