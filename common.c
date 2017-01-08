@@ -211,7 +211,7 @@ void writeIndex(INDEX *index[], Conf *conf, INFO *info)
 
 	sprintf(fileName, "./data/db/%s.index", (*conf).dbName);
 	fp = fopen(fileName, "w+");
-	for( i = 0; i < (*info).recCnt; i++)
+	for( i = 0; i <= (*info).recCnt; i++)
 	{
 		//index file format: @rid:xxx,del,fileID,offset
 		fprintf(fp, "@rid:%d,%d,%d,%d\n", (*index)[i].rid, (*index)[i].del, (*index)[i].fileID, (*index)[i].offset);
