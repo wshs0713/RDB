@@ -93,9 +93,8 @@ function highlight(key, record)
 		{
 			mKeys.push(key);
 		}
-		mKeyLen = mKeys.length;
-		console.log("mKeys length:" + mKeyLen);
 		
+		var mKeyLen = mKeys.length;
 		var recLen = record["result"].length;
 		for(i = 0; i < recLen; i++)
 		{
@@ -110,6 +109,7 @@ function highlight(key, record)
 			//highlight
 			for(j = 0; j < mKeyLen; j++)
 			{
+				console.log("mKeys[" + j + "]:" + mKeys[j]);
 				var objReg = new RegExp(mKeys[j], "g");
 				title = title.replace(objReg, "<high>"+mKeys[j]+"</high>");
 				record["result"][i].T = title;
