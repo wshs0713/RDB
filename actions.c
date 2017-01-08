@@ -491,6 +491,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 		}
 		/** end parse value **/
 		
+		/** search **/
 		t_start = clock();
 		for( i = 0; i <= (*info).curFile; i++)
 		{
@@ -633,10 +634,12 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			}
 			fclose(fp);
 		}//end of for loop, check all db file
+		/** end search **/
 
 		if(end > total)
 			end = total;
 		
+		/** output result **/
 		printf("{\"result\":[");
 		if(total > 0)
 		{
@@ -644,7 +647,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 			fp = fopen(fileName, "r");
 			if(fp)
 			{
-				for(i = 0; i < (end-start); i++)
+				for(i = start; i < end; i++)
 				{
 					fseek(fp, index[result[i].rid].offset, SEEK_SET);
 					printf("{");
@@ -688,8 +691,9 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 							if(strstr(line, ptr) == NULL)				//not end of record
 								printf(",");
 						}
-						if(i < end-start-1)
+						if(i < end-1)
 						{
+							//check next record's fileID, if different, close current fp and open new one.
 							if(index[result[i+1].rid].fileID != index[result[i].rid].fileID)
 							{
 								fclose(fp);
@@ -699,7 +703,7 @@ void rget(char *field, char *val, int start, int end, Conf *config, INFO *info)
 						}
 					}
 					printf("}");
-					if(i < end-start-1) //not the last one result
+					if(i < end-1) //not the last one result
 						printf(",");
 				} //end for
 			} //end if(fp)
