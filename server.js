@@ -83,9 +83,14 @@ function highlight(key, record)
 {
 	return new Promise(function(resolve) {
 		
-		//parse multi-keys
-		mKeys = [];
-		if((key.indexOf("!") != -1) || (key.indexOf(",") != -1) || (key.indexOf("^") != -1))
+		//parse multi-keys or specific field
+		var mKeys = [];
+		if(key.indexOf("=") != -1)	//specific field, highlight both title and content
+		{
+			buf = key.split(/=/);
+			mKeys.push(buf[1]);		//buf[0]: field, 1:keyword
+		}
+		else if((key.indexOf("!") != -1) || (key.indexOf(",") != -1) || (key.indexOf("^") != -1))
 		{
 			mKeys = key.split(/,|!|\^/);
 		}
