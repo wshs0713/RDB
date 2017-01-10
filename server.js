@@ -85,7 +85,13 @@ function highlight(key, record)
 		
 		//parse multi-keys or specific field
 		var mKeys = [];
-		if(key.indexOf("=") != -1)	//specific field, highlight both title and content
+		var nohl = 0;
+		if(key.indexOf("rid=") != -1) //get rid
+		{
+			mKeys = [];
+			nohl = 1; //no highlight
+		}
+		else if(key.indexOf("=") != -1)	//specific field, highlight both title and content
 		{
 			buf = key.split(/=/);
 			mKeys.push(buf[1]);		//buf[0]: field, 1:keyword
@@ -112,20 +118,28 @@ function highlight(key, record)
 			{
 				content = content.substring(0, 300);
 				content += "...";
-			}
-			
-			//highlight
-			for(j = 0; j < mKeyLen; j++)
+			}			
+			if(nohl == 1)
 			{
-				var objReg = new RegExp(mKeys[j], "g");
-				title = title.replace(objReg, "<high>"+mKeys[j]+"</high>");
-				record["result"][i].T = title;
-
-				content = content.replace(objReg, "<high>"+mKeys[j]+"</high>");
 				record["result"][i].B = content;
-				
-				if((i >= recLen-1) && (j >= mKeyLen-1))
+				if(i >= recLen-1)
 					resolve(record);
+			}
+			else
+			{
+				//highlight
+				for(j = 0; j < mKeyLen; j++)
+				{
+					var objReg = new RegExp(mKeys[j], "g");
+					title = title.replace(objReg, "<high>"+mKeys[j]+"</high>");
+					record["result"][i].T = title;
+
+					content = content.replace(objReg, "<high>"+mKeys[j]+"</high>");
+					record["result"][i].B = content;
+				
+					if((i >= recLen-1) && (j >= mKeyLen-1))
+						resolve(record);
+				}
 			}
 		}		
 	});
